@@ -1,0 +1,2587 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>Scene*Writer Mobile</title>
+    <style>
+        * { 
+            margin: 0; 
+            padding: 0; 
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+        html, body { 
+            font-family: "Hiragino Kaku Gothic ProN", "Yu Gothic", "Meiryo", sans-serif;
+            background: transparent; 
+            width: 100%; 
+            height: 100%; 
+            overflow: hidden;
+            touch-action: manipulation;
+        }
+        
+        /* アプリコンテナ */
+        .app-container { 
+            display: flex; 
+            flex-direction: column; 
+            width: 100%; 
+            height: 100vh;
+            background-color: #f5f5f5;
+        }
+        
+        /* ヘッダー - コンパクト化 */
+        .header { 
+            background: linear-gradient(to right, #7c5b53, #a0795f); 
+            color: white; 
+            padding: 10px 15px;
+            display: flex; 
+            flex-direction: column;
+            gap: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+            z-index: 100;
+        }
+        .header-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .header-title {
+            font-size: 18px;
+            font-weight: bold;
+        }
+        .header-actions {
+            display: flex;
+            gap: 8px;
+        }
+        .header-btn {
+            padding: 6px 12px;
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: none;
+            border-radius: 15px;
+            font-size: 13px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .header-stats {
+            display: flex;
+            gap: 15px;
+            font-size: 12px;
+            color: #e7d0a9;
+        }
+        .header-stat-item {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        
+        /* プロジェクト情報パネル - 折りたたみ可能 */
+        .project-panel {
+            background: white;
+            padding: 12px;
+            border-bottom: 1px solid #e0e0e0;
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+        .project-panel.collapsed {
+            max-height: 0;
+            padding: 0 12px;
+        }
+        .project-info-item {
+            margin-bottom: 8px;
+        }
+        .project-info-item:last-child {
+            margin-bottom: 0;
+        }
+        .project-label {
+            font-size: 10px;
+            color: #7c5b53;
+            font-weight: bold;
+            margin-bottom: 3px;
+        }
+        .project-input {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #c4a88b;
+            border-radius: 8px;
+            font-size: 14px;
+            background: white;
+        }
+        .project-textarea {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #c4a88b;
+            border-radius: 8px;
+            font-size: 13px;
+            resize: none;
+            min-height: 60px;
+            background: white;
+        }
+        
+        /* タブナビゲーション */
+        .tab-nav {
+            display: flex;
+            background: white;
+            border-bottom: 2px solid #c4a88b;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+        .tab-btn {
+            flex: 1;
+            min-width: 100px;
+            padding: 12px 8px;
+            background: transparent;
+            border: none;
+            border-bottom: 3px solid transparent;
+            color: #999;
+            font-size: 13px;
+            font-weight: bold;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+        .tab-btn.active {
+            color: #7c5b53;
+            border-bottom-color: #7c5b53;
+        }
+        
+        /* タブコンテンツ */
+        .tab-content {
+            display: none;
+            flex: 1;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+        .tab-content.active {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        /* エディタータブ */
+        .editor-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: white;
+        }
+        .editor-toolbar {
+            background: #f8f8f8;
+            padding: 8px 10px;
+            border-bottom: 1px solid #e0e0e0;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            max-height: 200px;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+        .editor-toolbar-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .char-count {
+            font-size: 12px;
+            color: #666;
+        }
+        .char-button-panel {
+            display: flex;
+            gap: 4px;
+            flex-wrap: wrap;
+        }
+        .char-button {
+            padding: 5px 10px;
+            background: #8b6a5b;
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 12px;
+            cursor: pointer;
+        }
+        .tool-button-panel {
+            display: flex;
+            gap: 4px;
+            flex-wrap: wrap;
+            padding-top: 4px;
+            border-top: 1px solid #e0e0e0;
+        }
+        .tool-button-mini {
+            padding: 4px 8px;
+            border: none;
+            border-radius: 10px;
+            font-size: 11px;
+            font-weight: bold;
+            cursor: pointer;
+            color: white;
+        }
+        .tool-mini-green { background: #6b8b5a; }
+        .tool-mini-brown { background: #8b6a5b; }
+        .tool-mini-pink { background: #c85a8b; }
+        .tool-mini-red { background: #b85a6b; }
+        .tool-mini-beige { background: #a87b5a; }
+        .editor-textarea {
+            flex: 1;
+            font-family: "Hiragino Kaku Gothic ProN", "Yu Gothic", sans-serif;
+            font-size: 15px;
+            border: none;
+            padding: 15px;
+            resize: none;
+            line-height: 1.8;
+        }
+        
+        /* シーン選択タブ */
+        .scene-list {
+            flex: 1;
+            overflow-y: auto;
+            background: white;
+        }
+        .scene-controls {
+            padding: 12px;
+            background: #f8f8f8;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        .scene-count-group {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        .scene-count-label {
+            font-size: 12px;
+            font-weight: bold;
+            color: #7c5b53;
+        }
+        .scene-count-select {
+            flex: 1;
+            padding: 8px;
+            border: 1px solid #c4a88b;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+        .scene-apply-btn {
+            padding: 8px 16px;
+            background: #7c5b53;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .scene-item {
+            padding: 15px;
+            border-bottom: 1px solid #e0e0e0;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .scene-item:active {
+            background: #f0f0f0;
+        }
+        .scene-item.active {
+            background: #D9BF9F;
+            border-left: 4px solid #7c5b53;
+        }
+        .scene-name {
+            font-size: 15px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 5px;
+        }
+        .scene-stats {
+            font-size: 12px;
+            color: #666;
+        }
+        
+        /* ツールタブ */
+        .tools-container {
+            padding: 15px;
+            background: white;
+        }
+        .tool-section {
+            margin-bottom: 20px;
+        }
+        .tool-section-title {
+            font-size: 14px;
+            font-weight: bold;
+            color: #7c5b53;
+            margin-bottom: 10px;
+            padding-bottom: 5px;
+            border-bottom: 2px solid #e7d0a9;
+        }
+        .tool-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+        .tool-btn {
+            padding: 15px 10px;
+            border: none;
+            border-radius: 12px;
+            font-size: 13px;
+            font-weight: bold;
+            cursor: pointer;
+            text-align: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .tool-btn-brown { background: #7c5b53; color: white; }
+        .tool-btn-green { background: #6b8b5a; color: white; }
+        .tool-btn-pink { background: #c85a8b; color: white; }
+        .tool-btn-red { background: #b85a6b; color: white; }
+        .tool-btn-beige { background: #a87b5a; color: white; }
+        
+        .checkbox-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-top: 10px;
+        }
+        .checkbox-label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+        }
+        
+        /* メモタブ */
+        .memo-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: white;
+        }
+        .memo-section {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 15px;
+            border-bottom: 8px solid #f5f5f5;
+        }
+        .memo-section:last-child {
+            border-bottom: none;
+        }
+        .memo-title {
+            font-size: 14px;
+            font-weight: bold;
+            color: #7c5b53;
+            margin-bottom: 8px;
+        }
+        .memo-textarea {
+            flex: 1;
+            width: 100%;
+            min-height: 150px;
+            padding: 10px;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            resize: none;
+            line-height: 1.6;
+            background: white;
+        }
+        
+        /* フローティングアクションボタン */
+        .fab-container {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 1000;
+        }
+        .fab {
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            background: #7c5b53;
+            color: white;
+            border: none;
+            font-size: 24px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .fab:active {
+            transform: scale(0.95);
+        }
+        
+        /* ウェルカム画面 */
+        .welcome-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: #D9BF9F;
+            z-index: 2000;
+            display: flex;
+            flex-direction: column;
+        }
+        .welcome-header {
+            background: #7c5b53;
+            padding: 40px 20px;
+            text-align: center;
+            color: white;
+        }
+        .welcome-title {
+            font-size: 32px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        .welcome-subtitle {
+            font-size: 14px;
+            color: #e7d0a9;
+        }
+        .welcome-body {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+        }
+        .welcome-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-bottom: 30px;
+        }
+        .welcome-btn {
+            padding: 18px;
+            background: #7c5b53;
+            color: white;
+            border: none;
+            border-radius: 15px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+        }
+        .welcome-recent-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: #7c5b53;
+            margin-bottom: 15px;
+        }
+        .welcome-recent-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .welcome-recent-item {
+            background: white;
+            border-radius: 12px;
+            padding: 15px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .welcome-recent-icon {
+            width: 50px;
+            height: 50px;
+            background: #f0e6d2;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            flex-shrink: 0;
+        }
+        .welcome-recent-info {
+            flex: 1;
+            min-width: 0;
+        }
+        .welcome-recent-name {
+            font-size: 16px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 3px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .welcome-recent-date {
+            font-size: 11px;
+            color: #999;
+        }
+        .welcome-recent-stats {
+            font-size: 11px;
+            color: #666;
+        }
+        .welcome-recent-delete {
+            width: 32px;
+            height: 32px;
+            background: transparent;
+            border: none;
+            color: #999;
+            font-size: 20px;
+            flex-shrink: 0;
+        }
+        
+        /* モーダル共通 */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.6);
+            display: none;
+            align-items: flex-end;
+            z-index: 3000;
+            animation: fadeIn 0.2s;
+        }
+        .modal.active {
+            display: flex;
+        }
+        .modal-content {
+            width: 100%;
+            max-height: 90vh;
+            background: white;
+            border-radius: 20px 20px 0 0;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            animation: slideUp 0.3s;
+        }
+        .modal-header {
+            background: linear-gradient(to right, #7c5b53, #a0795f);
+            color: white;
+            padding: 18px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .modal-title {
+            font-size: 18px;
+            font-weight: bold;
+        }
+        .modal-close {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 28px;
+            cursor: pointer;
+            padding: 0;
+            width: 32px;
+            height: 32px;
+        }
+        .modal-body {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+        }
+        .modal-footer {
+            padding: 15px 20px;
+            border-top: 1px solid #e0e0e0;
+            display: flex;
+            gap: 10px;
+        }
+        .modal-btn {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 10px;
+            font-size: 15px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .modal-btn-primary {
+            background: #7c5b53;
+            color: white;
+        }
+        .modal-btn-secondary {
+            background: #e0e0e0;
+            color: #666;
+        }
+        
+        /* メニューモーダル */
+        .menu-modal-content {
+    max-height: 80vh;
+}
+.menu-list {
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+    max-height: calc(80vh - 80px);
+    -webkit-overflow-scrolling: touch;
+}
+        .menu-item {
+            padding: 18px 20px;
+            border-bottom: 1px solid #f0f0f0;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 15px;
+        }
+        .menu-item:active {
+            background: #f5f5f5;
+        }
+        .menu-icon {
+            font-size: 20px;
+            width: 24px;
+            text-align: center;
+        }
+        
+        /* 統計表示 */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin: 15px 0;
+        }
+        .stat-card {
+            background: linear-gradient(135deg, #7c5b53 0%, #a0795f 100%);
+            color: white;
+            padding: 15px;
+            border-radius: 12px;
+            text-align: center;
+        }
+        .stat-label {
+            font-size: 11px;
+            color: #e7d0a9;
+            margin-bottom: 5px;
+        }
+        .stat-value {
+            font-size: 24px;
+            font-weight: bold;
+        }
+        .stat-unit {
+            font-size: 12px;
+            color: #e7d0a9;
+        }
+        
+        /* アニメーション */
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        @keyframes slideUp {
+            from { transform: translateY(100%); }
+            to { transform: translateY(0); }
+        }
+        
+        /* スクロールバー */
+        ::-webkit-scrollbar {
+            width: 4px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #c4a88b;
+            border-radius: 2px;
+        }
+        
+        /* セーフエリア対応 */
+        @supports (padding: max(0px)) {
+            .app-container {
+                padding-top: max(0px, env(safe-area-inset-top));
+                padding-bottom: max(0px, env(safe-area-inset-bottom));
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- ウェルカム画面 -->
+    <div id="welcomeScreen" class="welcome-screen">
+        <div class="welcome-header">
+            <div class="welcome-title">Scene＊Writer</div>
+            <div class="welcome-subtitle">モバイル版シナリオエディター</div>
+        </div>
+        <div class="welcome-body">
+            <div class="welcome-actions">
+                <button class="welcome-btn" onclick="app.createNewProject()">📝 新規プロジェクト</button>
+                <button class="welcome-btn" onclick="app.loadProject()">📂 プロジェクトを読み込む</button>
+            </div>
+            <div class="welcome-recent-title">最近のプロジェクト</div>
+            <div class="welcome-recent-list" id="recentProjectsList"></div>
+        </div>
+    </div>
+
+    <!-- メインアプリ -->
+    <div id="mainApp" class="app-container" style="display: none;">
+        <!-- ヘッダー -->
+        <div class="header">
+            <div class="header-top">
+                <div class="header-title">Scene*Writer</div>
+                <div class="header-actions">
+                    <button class="header-btn" onclick="app.showMenu()">☰</button>
+                </div>
+            </div>
+            <div class="header-stats">
+                <div class="header-stat-item">
+                    <span>📝</span>
+                    <span id="headerTotalCharCount">0</span>文字
+                </div>
+                <div class="header-stat-item">
+                    <span>⏱️</span>
+                    <span id="headerEstimatedDuration">0</span>分
+                </div>
+            </div>
+        </div>
+
+        <!-- タブナビゲーション -->
+        <div class="tab-nav">
+            <button class="tab-btn active" onclick="app.switchTab(0)">✏️ 編集</button>
+            <button class="tab-btn" onclick="app.switchTab(1)">📋 シーン</button>
+            <button class="tab-btn" onclick="app.switchTab(2)">📝 プロジェクト</button>
+        </div>
+
+        <!-- タブ1: エディター -->
+        <div class="tab-content active" id="tab-0">
+            <div class="editor-container">
+                <div class="editor-toolbar">
+                    <div class="editor-toolbar-row">
+                        <div class="char-count">
+                            <span id="currentSceneName">Scene-01</span> | 
+                            <span id="editorCharCount">0</span>文字
+                        </div>
+                    </div>
+                    <div class="char-button-panel" id="charButtonPanel"></div>
+                    <div class="tool-button-panel">
+                        <button class="tool-button-mini tool-mini-green" onclick="app.insertToGaki()">ト書き</button>
+                        <button class="tool-button-mini tool-mini-green" onclick="app.insertLocation()">現在地</button>
+                        <button class="tool-button-mini tool-mini-brown" onclick="app.openSoundEffect()">効果音</button>
+                        <button class="tool-button-mini tool-mini-brown" onclick="app.openBGM()">BGM</button>
+                        <button class="tool-button-mini tool-mini-brown" onclick="app.openAmbient()">環境音</button>
+                    </div>
+                    <div class="tool-button-panel" style="border-top: none; padding-top: 0;">
+                        <button class="tool-button-mini tool-mini-pink" onclick="app.openMoanGenerator()">💕 喘ぎ声</button>
+                        <button class="tool-button-mini tool-mini-red" onclick="app.openAdultSound()">🔞 効果音</button>
+                        <button class="tool-button-mini tool-mini-beige" onclick="app.openCreativeSlot()">🎰 スロット</button>
+<button class="tool-button-mini tool-mini-brown" onclick="app.openReplace()">🔄 置換</button>
+<button class="tool-button-mini tool-mini-brown" onclick="app.openDialogueNumbers()">🔢 連番</button>
+                    </div>
+                </div>
+                <textarea class="editor-textarea" id="contentEditor" placeholder="ここにシナリオを入力..."></textarea>
+            </div>
+        </div>
+
+        <!-- タブ2: シーン選択 -->
+        <div class="tab-content" id="tab-1">
+            <div class="scene-list">
+                <div class="scene-controls">
+                    <div class="scene-count-group">
+                        <span class="scene-count-label">シーン数:</span>
+                        <select class="scene-count-select" id="sectionCount">
+                            <option value="10" selected>10</option>
+                            <option value="20">20</option>
+                            <option value="30">30</option>
+                            <option value="50">50</option>
+                        </select>
+                        <button class="scene-apply-btn" onclick="app.applySectionCount()">適用</button>
+                    </div>
+                    <div class="tool-section" style="margin-top: 15px;">
+                        <div class="tool-section-title">シーン別あらすじ</div>
+                        <div style="font-size: 12px; color: #666; margin-bottom: 5px;">
+                            現在のシーン: <span id="currentSceneNameInTab" style="font-weight: bold; color: #7c5b53;">Scene-01</span>
+                        </div>
+                        <textarea class="memo-textarea" id="synopsisEditorTab" placeholder="現在のシーンのあらすじを入力..." style="min-height: 100px;"></textarea>
+                    </div>
+                </div>
+                <div id="sceneList"></div>
+            </div>
+        </div>
+
+        <!-- タブ3: プロジェクト情報 -->
+        <div class="tab-content" id="tab-2">
+            <div class="tools-container">
+                <div class="tool-section">
+                    <div class="tool-section-title">プロジェクト情報</div>
+                    <div style="margin-bottom: 15px;">
+                        <div class="project-label">作品タイトル</div>
+                        <input type="text" class="project-input" id="projectTitleTab" placeholder="タイトルを入力">
+                    </div>
+                    <div style="margin-bottom: 15px;">
+                        <div class="project-label">全体あらすじ</div>
+                        <textarea class="project-textarea" id="globalSynopsisTab" placeholder="あらすじを入力" style="min-height: 100px;"></textarea>
+                    </div>
+                </div>
+
+                <div class="tool-section">
+                    <div class="tool-section-title">キャラクター設定</div>
+                    <button class="tool-btn tool-btn-brown" onclick="app.openCharacterManager()" style="width: 100%; margin-bottom: 10px;">
+                        👥 キャラクター管理
+                    </button>
+                    <div class="checkbox-group">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="useQuoteCheckboxTab">
+                            <span>「」形式で挿入</span>
+                        </label>
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="useColonCheckboxTab" checked>
+                            <span>：形式で挿入</span>
+                        </label>
+                    </div>
+                </div>
+                
+                <div class="tool-section">
+                    <div class="tool-section-title">メモ</div>
+                    <textarea class="memo-textarea" id="memoEditorTab" placeholder="自由にメモを入力..." style="min-height: 200px;"></textarea>
+                </div>
+            </div>
+        </div>
+
+        <!-- FAB -->
+        <div class="fab-container">
+            <button class="fab" onclick="app.saveProject()">💾</button>
+        </div>
+    </div>
+
+    <!-- メニューモーダル -->
+    <div id="menuModal" class="modal">
+        <div class="modal-content menu-modal-content">
+            <div class="modal-header">
+                <div class="modal-title">メニュー</div>
+                <button class="modal-close" onclick="app.hideMenu()">×</button>
+            </div>
+            <div class="menu-list">
+<div class="menu-item" onclick="app.backToWelcome()">
+    <span class="menu-icon">🏠</span>
+    <span>ホーム</span>
+</div>
+<div class="menu-item" onclick="window.open('https://ambrosestarlit.wixstudio.com/official/scenewriter-help-mobile', '_blank')">
+    <span class="menu-icon">💡</span>
+    <span>使い方</span>
+</div>
+                <div class="menu-item" onclick="app.createNewProject()">
+                    <span class="menu-icon">📝</span>
+
+                    <span>新規プロジェクト</span>
+                </div>
+                <div class="menu-item" onclick="app.loadProject()">
+                    <span class="menu-icon">📂</span>
+                    <span>プロジェクトを読み込む</span>
+                </div>
+                <div class="menu-item" onclick="app.saveProject()">
+                    <span class="menu-icon">💾</span>
+                    <span>上書き保存</span>
+                </div>
+                <div class="menu-item" onclick="app.exportProject()">
+                    <span class="menu-icon">📤</span>
+                    <span>プロジェクトをコピー</span>
+                </div>
+                <div class="menu-item" onclick="app.exportTxt()">
+                    <span class="menu-icon">📄</span>
+                    <span>TXTをコピー</span>
+                </div>
+                <div class="menu-item" onclick="app.showAnalysis()">
+    <span class="menu-icon">📊</span>
+    <span>分析ツール</span>
+</div>
+                <div class="menu-item" onclick="app.toggleProjectPanel()">
+                    <span class="menu-icon">ℹ️</span>
+                    <span>プロジェクト情報</span>
+                </div>
+                            </div>
+        </div>
+    </div>
+
+    <script>
+// Scene*Writer Mobile - 完全版JavaScript
+// デスクトップ版の全機能を含む
+
+const app = {
+    currentProject: null,
+    cuts: [],
+    currentCut: 0,
+    characters: [],
+    
+    init() {
+        const select = document.getElementById('sectionCount');
+        select.innerHTML = '';
+        for (let i = 1; i <= 300; i++) {
+            const option = document.createElement('option');
+            option.value = i;
+            option.textContent = i;
+            if (i === 10) option.selected = true;
+            select.appendChild(option);
+        }
+        
+        this.setupEventListeners();
+        this.startClock();
+        this.updateRecentProjects();
+    },
+    
+    setupEventListeners() {
+        document.getElementById('contentEditor').addEventListener('input', () => {
+            this.updateCharCount();
+        });
+        
+        const syncProjectTitle = () => {
+            const value = document.getElementById('projectTitleTab').value;
+            this._projectTitle = value;
+        };
+        
+        const syncGlobalSynopsis = () => {
+            const value = document.getElementById('globalSynopsisTab').value;
+            this._globalSynopsis = value;
+        };
+        
+        const syncSynopsis = () => {
+            if (this.cuts[this.currentCut]) {
+                this.cuts[this.currentCut].synopsis = document.getElementById('synopsisEditorTab').value;
+            }
+        };
+        
+        const syncMemo = () => {
+            if (this.currentProject) {
+                localStorage.setItem(`memo_${this.currentProject}`, document.getElementById('memoEditorTab').value);
+            }
+        };
+        
+        document.getElementById('projectTitleTab').addEventListener('input', syncProjectTitle);
+        document.getElementById('globalSynopsisTab').addEventListener('input', syncGlobalSynopsis);
+        document.getElementById('synopsisEditorTab').addEventListener('input', syncSynopsis);
+        document.getElementById('memoEditorTab').addEventListener('input', syncMemo);
+        
+        document.querySelectorAll('.modal').forEach(modal => {
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    modal.classList.remove('active');
+                }
+            });
+        });
+    },
+    
+    startClock() {
+        setInterval(() => {
+            let totalChars = 0;
+            this.cuts.forEach((cut, index) => {
+                if (index === this.currentCut) {
+                    const editor = document.getElementById('contentEditor');
+                    totalChars += editor ? editor.value.length : 0;
+                } else {
+                    totalChars += cut.content ? cut.content.length : 0;
+                }
+            });
+            
+            const minutes = Math.floor(totalChars / 240);
+            const headerTotalCharCount = document.getElementById('headerTotalCharCount');
+            const headerEstimatedDuration = document.getElementById('headerEstimatedDuration');
+            
+            if (headerTotalCharCount) headerTotalCharCount.textContent = totalChars.toLocaleString();
+            if (headerEstimatedDuration) headerEstimatedDuration.textContent = minutes;
+        }, 1000);
+    },
+    
+    switchTab(index) {
+        document.querySelectorAll('.tab-btn').forEach((btn, i) => {
+            btn.classList.toggle('active', i === index);
+        });
+        document.querySelectorAll('.tab-content').forEach((content, i) => {
+            content.classList.toggle('active', i === index);
+        });
+        
+        if (index === 1) {
+            this.updateSceneList();
+            if (this.cuts[this.currentCut]) {
+                document.getElementById('synopsisEditorTab').value = this.cuts[this.currentCut].synopsis || '';
+                const sceneNameInTab = document.getElementById('currentSceneNameInTab');
+                if (sceneNameInTab) {
+                    sceneNameInTab.textContent = this.cuts[this.currentCut].name;
+                }
+            }
+        }
+        
+        if (index === 2) {
+            document.getElementById('projectTitleTab').value = this._projectTitle || '';
+            document.getElementById('globalSynopsisTab').value = this._globalSynopsis || '';
+        }
+    },
+    
+   showMenu() {
+    // 既に開いているモーダルをすべて閉じる（メニュー以外）
+    document.querySelectorAll('.modal').forEach(modal => {
+        if (modal.id !== 'menuModal') {
+            modal.remove();
+        }
+    });
+    
+    const menuModal = document.getElementById('menuModal');
+    if (menuModal) {
+        // メニューモーダルが既にactiveになっている場合は一旦リセット
+        menuModal.classList.remove('active');
+        // 少し待ってから再度activeにする（強制的に再描画）
+        setTimeout(() => {
+            menuModal.classList.add('active');
+        }, 10);
+    } else {
+        console.error('メニューモーダルが見つかりません');
+        alert('メニューの読み込みに失敗しました。ページを再読み込みしてください。');
+    }
+},
+
+
+    
+    toggleProjectPanel() {
+        const panel = document.getElementById('projectPanel');
+        if (panel) panel.classList.toggle('collapsed');
+        this.hideMenu();
+    },
+    
+    updateRecentProjects() {
+        const list = document.getElementById('recentProjectsList');
+        const projects = this.getRecentProjects();
+        
+        list.innerHTML = '';
+        projects.forEach(project => {
+            const item = document.createElement('div');
+            item.className = 'welcome-recent-item';
+            item.innerHTML = `
+                <div class="welcome-recent-icon">📝</div>
+                <div class="welcome-recent-info">
+                    <div class="welcome-recent-name">${project.name}</div>
+                    <div class="welcome-recent-date">${new Date(project.lastModified).toLocaleString('ja-JP')}</div>
+                    <div class="welcome-recent-stats">${project.cuts}シーン / ${project.characters}文字</div>
+                </div>
+                <button class="welcome-recent-delete" onclick="app.deleteProject('${project.name}'); event.stopPropagation();">×</button>
+            `;
+            item.onclick = () => this.loadProject(project.name);
+            list.appendChild(item);
+        });
+    },
+    
+    getRecentProjects() {
+        const stored = localStorage.getItem('voiceWriterProjects');
+        return stored ? JSON.parse(stored) : [];
+    },
+    
+    saveProjectList() {
+        const projects = this.getRecentProjects();
+        const existing = projects.findIndex(p => p.name === this.currentProject);
+        
+        const projectData = {
+            name: this.currentProject,
+            lastModified: new Date().toISOString(),
+            cuts: this.cuts.length,
+            characters: this.calculateTotalCharacters(this.currentProject)
+        };
+        
+        if (existing >= 0) {
+            projects[existing] = projectData;
+        } else {
+            projects.unshift(projectData);
+        }
+        
+        localStorage.setItem('voiceWriterProjects', JSON.stringify(projects.slice(0, 20)));
+    },
+    
+    calculateTotalCharacters(projectName) {
+        const data = localStorage.getItem(`project_${projectName}`);
+        if (!data) return 0;
+        
+        const project = JSON.parse(data);
+        return project.cuts.reduce((sum, cut) => sum + (cut.content ? cut.content.length : 0), 0);
+    },
+    
+    createNewProject() {
+        const name = prompt('プロジェクト名を入力してください:', `プロジェクト_${Date.now()}`);
+        if (!name) return;
+        
+        this._projectTitle = '';
+        this._globalSynopsis = '';
+        
+        document.getElementById('projectTitleTab').value = '';
+        document.getElementById('globalSynopsisTab').value = '';
+        document.getElementById('memoEditorTab').value = '';
+        document.getElementById('contentEditor').value = '';
+        document.getElementById('synopsisEditorTab').value = '';
+        
+        this.currentProject = name;
+        this.cuts = [];
+        for (let i = 0; i < 10; i++) {
+            this.cuts.push({
+                name: `Scene-${String(i + 1).padStart(2, '0')}`,
+                content: '',
+                synopsis: '',
+                targetMinutes: 0
+            });
+        }
+        this.characters = [];
+        this.currentCut = -1;
+        
+        document.getElementById('welcomeScreen').style.display = 'none';
+        document.getElementById('mainApp').style.display = 'flex';
+        
+        setTimeout(() => {
+        this.loadCut(0);
+        this.updateSceneList();
+        this.updateCharacterButtons();
+        this.saveProject();
+        
+        // メニューモーダルの状態を確認
+        const menuModal = document.getElementById('menuModal');
+        if (menuModal) {
+            menuModal.classList.remove('active');
+        }
+    }, 0);
+    
+    this.hideMenu();
+},
+    loadProject(name) {
+        if (!name) {
+            this.showLoadProjectModal();
+            return;
+        }
+        
+        const data = localStorage.getItem(`project_${name}`);
+        if (!data) {
+            alert('プロジェクトが見つかりません');
+            return;
+        }
+        
+        this.loadProjectFromData(data, name);
+    },
+    
+    showLoadProjectModal() {
+        const modal = document.createElement('div');
+        modal.className = 'modal active';
+        modal.innerHTML = `
+            <div class="modal-content" style="max-height: 85vh;">
+                <div class="modal-header">
+                    <div class="modal-title">📂 プロジェクトを読み込む</div>
+                    <button class="modal-close" onclick="this.closest('.modal').remove()">×</button>
+                </div>
+                <div class="modal-body" style="overflow-y: auto;">
+                    <div style="margin-bottom: 15px;">
+                        <div style="font-weight: bold; margin-bottom: 8px; color: #7c5b53;">保存したプロジェクトデータを貼り付けてください</div>
+                        <textarea id="pasteProjectData" 
+                                  style="width: 100%; height: 300px; padding: 10px; border: 1px solid #c4a88b; border-radius: 8px; font-family: monospace; font-size: 12px; background: white; resize: vertical;" 
+                                  placeholder="メモアプリに保存したプロジェクトデータ（.vwp）の内容を&#10;ここに貼り付けてください...&#10;&#10;【貼り付け方法】&#10;1. メモアプリで保存したプロジェクトを開く&#10;2. 全選択してコピー&#10;3. このテキストエリアに長押しでペースト"></textarea>
+                    </div>
+                    
+                    <div style="background: #f0e6d2; padding: 12px; border-radius: 8px; font-size: 12px; color: #7c5b53; line-height: 1.6;">
+                        <div style="font-weight: bold; margin-bottom: 5px;">💡 使い方</div>
+                        <div>• メモアプリに保存した .vwp ファイルの内容をコピー</div>
+                        <div>• 上のテキストエリアに貼り付け</div>
+                        <div>• 「読み込む」ボタンをタップ</div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="modal-btn modal-btn-primary" onclick="app.loadFromPaste()">読み込む</button>
+                    <button class="modal-btn modal-btn-secondary" onclick="this.closest('.modal').remove()">キャンセル</button>
+                </div>
+            </div>
+        `;
+        
+        document.body.appendChild(modal);
+        this.hideMenu();
+    },
+    
+    loadFromPaste() {
+    const textarea = document.getElementById('pasteProjectData');
+    const pastedData = textarea.value.trim();
+    
+    if (!pastedData) {
+        alert('プロジェクトデータが入力されていません。');
+        return;
+    }
+    
+    try {
+        const project = JSON.parse(pastedData);
+        
+        const projectName = prompt('プロジェクト名を入力してください:', `読み込み_${Date.now()}`);
+        if (!projectName) {
+            return;
+        }
+        
+        localStorage.setItem(`project_${projectName}`, pastedData);
+        
+        // すべてのモーダルを閉じる
+        document.querySelectorAll('.modal').forEach(modal => {
+            modal.remove();
+        });
+        
+        this.loadProjectFromData(pastedData, projectName);
+        
+    } catch (error) {
+        alert(`プロジェクトデータの読み込みに失敗しました。\n\nエラー: ${error.message}\n\n正しいプロジェクトデータ（.vwp形式）を貼り付けてください。`);
+    }
+},
+
+    
+    
+    loadProjectFromData(data, name) {
+    try {
+        const project = JSON.parse(data);
+        
+        const cuts = project.cuts || [];
+        cuts.forEach(cut => {
+            if (cut.name && cut.name.startsWith('Cut-')) {
+                cut.name = cut.name.replace('Cut-', 'Scene-');
+            }
+        });
+        
+        document.getElementById('contentEditor').value = '';
+        
+        this.currentProject = name;
+        this.cuts = cuts;
+        this.characters = project.characters || [];
+        this.currentCut = -1;
+        
+        this._projectTitle = project.title || '';
+        this._globalSynopsis = project.globalSynopsis || '';
+        
+        document.getElementById('projectTitleTab').value = this._projectTitle;
+        document.getElementById('globalSynopsisTab').value = this._globalSynopsis;
+        
+        document.getElementById('welcomeScreen').style.display = 'none';
+        document.getElementById('mainApp').style.display = 'flex';
+        
+        setTimeout(() => {
+            this.loadCut(0);
+            this.updateSceneList();
+            this.updateCharacterButtons();
+            
+            document.querySelectorAll('.modal').forEach(modal => {
+                if (modal.id !== 'menuModal') {
+                    modal.remove();
+                } else {
+                    modal.classList.remove('active');
+                }
+            });
+        }, 0);
+        
+        alert(`プロジェクト「${name}」を読み込みました！`);
+        
+    } catch (error) {
+        alert(`プロジェクトの読み込みに失敗しました。\nエラー: ${error.message}`);
+    }
+},
+
+    
+    saveProject() {
+        if (!this.currentProject) return;
+        
+        this.saveCutContent();
+        
+        const project = {
+            cuts: this.cuts,
+            characters: this.characters,
+            title: this._projectTitle || '',
+            globalSynopsis: this._globalSynopsis || '',
+            lastModified: new Date().toISOString()
+        };
+        
+        localStorage.setItem(`project_${this.currentProject}`, JSON.stringify(project));
+        this.saveProjectList();
+        
+        alert(`プロジェクト「${this.currentProject}」を保存しました。`);
+        this.hideMenu();
+    },
+    
+    deleteProject(name) {
+        if (!confirm(`プロジェクト「${name}」を削除しますか？`)) return;
+        
+        localStorage.removeItem(`project_${name}`);
+        const projects = this.getRecentProjects().filter(p => p.name !== name);
+        localStorage.setItem('voiceWriterProjects', JSON.stringify(projects));
+        this.updateRecentProjects();
+    },
+    
+    exportProject() {
+        if (!this.currentProject) {
+            alert('プロジェクトが開かれていません');
+            return;
+        }
+        
+        this.saveCutContent();
+        const data = localStorage.getItem(`project_${this.currentProject}`);
+        if (!data) return;
+        
+        this.downloadFile(data, `${this.currentProject}.vwp`, 'application/json');
+        this.hideMenu();
+    },
+    
+    exportTxt() {
+        if (!this.currentProject) {
+            alert('プロジェクトが開かれていません');
+            return;
+        }
+        
+        let text = `プロジェクト: ${this.currentProject}\n`;
+        text += `作成日時: ${new Date().toLocaleString('ja-JP')}\n`;
+        text += '='.repeat(50) + '\n\n';
+        
+        this.cuts.forEach(cut => {
+            text += `【${cut.name}】\n`;
+            if (cut.synopsis) {
+                text += `あらすじ: ${cut.synopsis}\n`;
+            }
+            text += `${cut.content}\n`;
+            text += '-'.repeat(50) + '\n\n';
+        });
+        
+        this.downloadFile(text, `${this.currentProject}.txt`, 'text/plain');
+        this.hideMenu();
+    },
+    
+    backToWelcome() {
+    if (this.currentProject) {
+        this.saveCutContent();
+        const project = {
+            cuts: this.cuts,
+            characters: this.characters,
+            title: this._projectTitle || '',
+            globalSynopsis: this._globalSynopsis || '',
+            lastModified: new Date().toISOString()
+        };
+        localStorage.setItem(`project_${this.currentProject}`, JSON.stringify(project));
+        this.saveProjectList();
+    }
+    document.getElementById('mainApp').style.display = 'none';
+    document.getElementById('welcomeScreen').style.display = 'flex';
+    this.updateRecentProjects();
+    
+    // メニューモーダルを閉じる
+    const menuModal = document.getElementById('menuModal');
+    if (menuModal) {
+        menuModal.classList.remove('active');
+    }
+},
+
+hideMenu() {
+    const menuModal = document.getElementById('menuModal');
+    if (menuModal) {
+        menuModal.classList.remove('active');
+    }
+},
+
+    applySectionCount() {
+        const count = parseInt(document.getElementById('sectionCount').value);
+        const currentCount = this.cuts.length;
+        
+        if (count > currentCount) {
+            for (let i = currentCount; i < count; i++) {
+                this.cuts.push({
+                    name: `Scene-${String(i + 1).padStart(2, '0')}`,
+                    content: '',
+                    synopsis: '',
+                    targetMinutes: 0
+                });
+            }
+        } else if (count < currentCount) {
+            if (!confirm(`シーン数を減らすと、${currentCount - count}個のシーンが削除されます。続行しますか？`)) {
+                return;
+            }
+            this.cuts = this.cuts.slice(0, count);
+            if (this.currentCut >= count) {
+                this.currentCut = count - 1;
+            }
+        }
+        
+        this.updateSceneList();
+        this.loadCut(this.currentCut);
+    },
+    
+    updateSceneList() {
+        const list = document.getElementById('sceneList');
+        list.innerHTML = '';
+        
+        this.cuts.forEach((cut, index) => {
+            const item = document.createElement('div');
+            item.className = 'scene-item';
+            if (index === this.currentCut) {
+                item.classList.add('active');
+            }
+            
+            const chars = cut.content ? cut.content.length : 0;
+            const minutes = Math.floor(chars / 240);
+            
+            item.innerHTML = `
+                <div class="scene-name">${cut.name}</div>
+                <div class="scene-stats">${chars}文字 / ${minutes}分</div>
+            `;
+            item.onclick = () => {
+                this.loadCut(index);
+                this.switchTab(0);
+            };
+            
+            list.appendChild(item);
+        });
+    },
+    
+    loadCut(index) {
+        if (this.currentCut !== index) {
+            this.saveCutContent();
+        }
+        
+        this.currentCut = index;
+        const cut = this.cuts[index];
+        
+        document.getElementById('contentEditor').value = cut.content || '';
+        document.getElementById('synopsisEditorTab').value = cut.synopsis || '';
+        document.getElementById('currentSceneName').textContent = cut.name;
+        
+        const sceneNameInTab = document.getElementById('currentSceneNameInTab');
+        if (sceneNameInTab) {
+            sceneNameInTab.textContent = cut.name;
+        }
+        
+        this.updateSceneList();
+        this.updateCharCount();
+    },
+    
+    saveCutContent() {
+        if (this.cuts[this.currentCut]) {
+            this.cuts[this.currentCut].content = document.getElementById('contentEditor').value;
+        }
+    },
+    
+    updateCharCount() {
+        const content = document.getElementById('contentEditor').value;
+        document.getElementById('editorCharCount').textContent = content.length;
+        
+        this.saveCutContent();
+        
+        const totalChars = this.cuts.reduce((sum, cut) => sum + (cut.content ? cut.content.length : 0), 0);
+        const headerTotalCharCount = document.getElementById('headerTotalCharCount');
+        const headerEstimatedDuration = document.getElementById('headerEstimatedDuration');
+        
+        if (headerTotalCharCount) headerTotalCharCount.textContent = totalChars.toLocaleString();
+        if (headerEstimatedDuration) headerEstimatedDuration.textContent = Math.floor(totalChars / 240);
+    },
+    
+    openCharacterManager() {
+        const name = prompt('キャラクター名を入力してください:');
+        if (name && !this.characters.includes(name)) {
+            this.characters.push(name);
+            this.updateCharacterButtons();
+        }
+    },
+    
+    updateCharacterButtons() {
+        const panel = document.getElementById('charButtonPanel');
+        panel.innerHTML = '';
+        
+        this.characters.forEach(char => {
+            const btn = document.createElement('button');
+            btn.className = 'char-button';
+            btn.textContent = char;
+            btn.onclick = () => this.insertCharacter(char);
+            panel.appendChild(btn);
+        });
+        
+        const specialChars = ['…', 'っ', 'ッ', '♡', '〜', 'ー'];
+        specialChars.forEach(char => {
+            const btn = document.createElement('button');
+            btn.className = 'char-button';
+            btn.textContent = char;
+            btn.onclick = () => this.insertText(char);
+            panel.appendChild(btn);
+        });
+    },
+    
+    insertCharacter(name) {
+        const useQuote = document.getElementById('useQuoteCheckboxTab')?.checked || false;
+        const useColon = document.getElementById('useColonCheckboxTab')?.checked || true;
+        
+        let text = '';
+        if (useColon) {
+            text = `${name}：`;
+        } else if (useQuote) {
+            text = `${name}「」`;
+        } else {
+            text = name;
+        }
+        
+        this.insertText(text);
+    },
+    
+    insertText(text) {
+        const editor = document.getElementById('contentEditor');
+        const start = editor.selectionStart;
+        const end = editor.selectionEnd;
+        const content = editor.value;
+        
+        editor.value = content.substring(0, start) + text + content.substring(end);
+        editor.selectionStart = editor.selectionEnd = start + text.length;
+        
+        if (text.includes('「」')) {
+            editor.selectionStart = editor.selectionEnd = start + text.length - 1;
+        }
+        
+        editor.focus();
+        this.saveCutContent();
+        this.updateCharCount();
+    },
+    
+    insertToGaki() {
+        this.insertText('// ');
+    },
+    
+    insertLocation() {
+        this.insertText('〇 ');
+    },
+    
+    openSoundEffect() {
+        this.insertText('☆効果音//');
+    },
+    
+    openBGM() {
+        this.insertText('☆BGM//');
+    },
+    
+    openAmbient() {
+        this.insertText('☆環境音//');
+    },
+    
+ openMoanGenerator() {
+    this.showMoanGeneratorModal();
+},
+
+showMoanGeneratorModal() {
+    const modal = document.createElement('div');
+    modal.className = 'modal active';
+    modal.innerHTML = `
+        <div class="modal-content" style="max-height: 85vh;">
+            <div class="modal-header" style="background: linear-gradient(to right, #c85a8b, #d87aa0);">
+                <div class="modal-title">💕 喘ぎ声生成</div>
+                <button class="modal-close" onclick="this.closest('.modal').remove()">×</button>
+            </div>
+            <div class="modal-body" style="overflow-y: auto;">
+                <div style="margin-bottom: 15px;">
+                    <div style="font-weight: bold; margin-bottom: 8px; color: #7c5b53;">喘ぎ声タイプ</div>
+                    <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                        <label style="display: flex; align-items: center; gap: 5px;">
+                            <input type="radio" name="moanType" value="normal" checked>
+                            <span>通常</span>
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 5px;">
+                            <input type="radio" name="moanType" value="a-only">
+                            <span>「あ」のみ</span>
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 5px;">
+                            <input type="radio" name="moanType" value="n-only">
+                            <span>「ん」のみ</span>
+                        </label>
+                    </div>
+                </div>
+                
+                <div style="margin-bottom: 15px;">
+                    <div style="font-weight: bold; margin-bottom: 8px; color: #7c5b53;">
+                        長さ: <span id="moanLength">20</span>語
+                    </div>
+                    <input type="range" id="moanLengthSlider" min="5" max="50" value="20" 
+                           style="width: 100%;"
+                           oninput="document.getElementById('moanLength').textContent = this.value">
+                </div>
+                
+                <div style="margin-bottom: 15px;">
+                    <div style="font-weight: bold; margin-bottom: 8px; color: #7c5b53;">オプション</div>
+                    <label style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+                        <input type="checkbox" id="useDakuon">
+                        <span>濁音を使う</span>
+                    </label>
+                    <label style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+                        <input type="checkbox" id="useHeart" checked>
+                        <span>ハート(♡)を付ける</span>
+                    </label>
+                    <label style="display: flex; align-items: center; gap: 8px;">
+                        <input type="checkbox" id="useDialogue">
+                        <span>セリフを混ぜる</span>
+                    </label>
+                </div>
+                
+                <div id="dialogueOptions" style="margin-bottom: 15px; display: none;">
+                    <div style="font-weight: bold; margin-bottom: 8px; color: #7c5b53;">セリフの種類</div>
+                    <label style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+                        <input type="checkbox" class="dialogue-type" value="suki">
+                        <span>すき系</span>
+                    </label>
+                    <label style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+                        <input type="checkbox" class="dialogue-type" value="onegai">
+                        <span>お願い系</span>
+                    </label>
+                    <label style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+                        <input type="checkbox" class="dialogue-type" value="yamete">
+                        <span>やめて系</span>
+                    </label>
+                    <label style="display: flex; align-items: center; gap: 8px;">
+                        <input type="checkbox" class="dialogue-type" value="kimochii">
+                        <span>きもちいい系</span>
+                    </label>
+                </div>
+                
+                <button onclick="app.generateMoan()" 
+                        style="width: 100%; padding: 12px; background: #c85a8b; color: white; border: none; border-radius: 10px; font-size: 15px; font-weight: bold; margin-bottom: 15px;">
+                    生成
+                </button>
+                
+                <div style="margin-bottom: 15px;">
+                    <div style="font-weight: bold; margin-bottom: 8px; color: #7c5b53;">生成結果</div>
+                    <div id="moanResult" style="background: #f9f9f9; padding: 15px; border-radius: 8px; min-height: 100px; font-family: 'MS Gothic', monospace; font-size: 14px; line-height: 1.8; white-space: pre-wrap; word-wrap: break-word;">
+                        ここに生成された喘ぎ声が表示されます
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="modal-btn modal-btn-primary" onclick="app.insertGeneratedMoan()">挿入</button>
+                <button class="modal-btn modal-btn-secondary" onclick="this.closest('.modal').remove()">閉じる</button>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+    
+    modal.querySelector('#useDialogue').addEventListener('change', (e) => {
+        modal.querySelector('#dialogueOptions').style.display = e.target.checked ? 'block' : 'none';
+    });
+},
+
+generateMoan() {
+    // 最後に表示されたモーダル（アクティブなモーダル）を取得
+    const modals = document.querySelectorAll('.modal.active');
+    const modal = modals[modals.length - 1];
+    
+    if (!modal) {
+        alert('モーダルが見つかりません');
+        return;
+    }
+    
+    const typeInput = modal.querySelector('input[name="moanType"]:checked');
+    if (!typeInput) {
+        alert('喘ぎ声タイプが選択されていません');
+        return;
+    }
+    
+    const type = typeInput.value;
+    const lengthSlider = modal.querySelector('#moanLengthSlider');
+    const length = lengthSlider ? parseInt(lengthSlider.value) : 20;
+    const useDakuon = modal.querySelector('#useDakuon')?.checked || false;
+    const useHeart = modal.querySelector('#useHeart')?.checked || false;
+    const useDialogue = modal.querySelector('#useDialogue')?.checked || false;
+
+    const normalMoans = ['あっ', 'んっ', 'はぁっ', 'ふぁっ', 'ひゃっ', 'あぁっ', 'んんっ', 'はぁぁっ', 'ふぅっ', 'ひぅっ', 
+                         'あんっ', 'んあっ', 'はぁんっ', 'ふぁぁっ', 'やっ', 'いっ', 'うっ', 'えっ', 'おっ', 'きゃっ',
+                         'ひっ', 'ふっ', 'へっ', 'ほっ', 'くぅっ', 'あはっ', 'んはっ', 'はうっ', 'ふぅんっ', 'ひぃっ'];
+    const aMoans = ['あっ', 'あぁっ', 'あああっ', 'ああぁっ', 'あんっ', 'あはっ', 'あぅっ', 'あぁぁっ'];
+    const nMoans = ['んっ', 'んんっ', 'んぅっ', 'んああっ', 'んんんっ', 'んはっ', 'んぁっ', 'んふっ'];
+    const dakuonMoans = ['ん゛っ', 'ん゛ん゛っ', 'ん゛あっ', 'ん゛ぅっ', 'んっ゛', 'んんっ゛', 'お゛っ', 'ん゛お゛っ', 'あ゛', 'あ゛あ゛っ'];
+    
+    const dialogues = {
+        suki: ['好き', '大好き', 'すき', 'だいすき'],
+        onegai: ['お願い', 'もっと', 'おねが', 'おね、が'],
+        yamete: ['やめて', 'いや', 'やだ', 'だめ', 'らめ', 'だめぇ', 'らめぇ'],
+        kimochii: ['気持ちいい', 'きもちいい', 'いい', 'きもちい', 'イッ', 'イクッ', 'イク', 'イク…', 'イクイクイクイク']
+    };
+
+    let moans = type === 'a-only' ? aMoans : type === 'n-only' ? nMoans : normalMoans;
+    let result = [];
+
+    let selectedDialogues = [];
+    if (useDialogue) {
+        modal.querySelectorAll('.dialogue-type:checked').forEach(checkbox => {
+            selectedDialogues = selectedDialogues.concat(dialogues[checkbox.value] || []);
+        });
+    }
+
+    for (let i = 0; i < length; i++) {
+        if (useDialogue && selectedDialogues.length > 0 && Math.random() < 0.1) {
+            const dialogue = selectedDialogues[Math.floor(Math.random() * selectedDialogues.length)];
+            result.push(dialogue + (useHeart ? '♡' : ''));
+        } else {
+            let moan;
+            if (useDakuon && Math.random() < 0.3) {
+                moan = dakuonMoans[Math.floor(Math.random() * dakuonMoans.length)];
+            } else {
+                moan = moans[Math.floor(Math.random() * moans.length)];
+            }
+            result.push(moan + (useHeart ? '♡' : ''));
+        }
+    }
+
+    const separator = type === 'normal' ? '……' : '　';
+    const generatedText = result.join(separator);
+    
+    const resultElem = modal.querySelector('#moanResult');
+    if (resultElem) {
+        resultElem.textContent = generatedText;
+        this._generatedMoan = generatedText;
+    } else {
+        alert('結果表示エリアが見つかりません');
+    }
+},
+insertGeneratedMoan() {
+    if (this._generatedMoan) {
+        this.insertText(this._generatedMoan);
+        document.querySelector('.modal').remove();
+    } else {
+        alert('先に喘ぎ声を生成してください');
+    }
+},
+
+openAdultSound() {
+    this.showAdultSoundModal();
+},
+
+showAdultSoundModal() {
+    const soundButtons = [
+        { category: 'ピストン', sounds: [
+            { label: 'ピストン(ゆっくり)' },
+            { label: 'ピストン(普通)' },
+            { label: 'ピストン(激しい)' }
+        ]},
+        { category: 'パンパン', sounds: [
+            { label: 'パンパン(ゆっくり)' },
+            { label: 'パンパン(普通)' },
+            { label: 'パンパン(激しい)' }
+        ]},
+        { category: '手コキ', sounds: [
+            { label: '手コキ(ゆっくり)' },
+            { label: '手コキ(普通)' },
+            { label: '手コキ(激しい)' }
+        ]},
+        { category: '愛撫', sounds: [
+            { label: '愛撫(やさしい)' },
+            { label: '愛撫(激しい)' }
+        ]},
+        { category: '挿入', sounds: [
+            { label: '挿入' }
+        ]},
+        { category: '射精', sounds: [
+            { label: '射精(外に大量)' },
+            { label: '射精(中に大量)' },
+            { label: '射精(外に少量)' },
+            { label: '射精(中に少量)' }
+        ]}
+    ];
+
+    let buttonsHtml = '';
+    soundButtons.forEach(category => {
+        buttonsHtml += `
+            <div style="margin-bottom: 15px;">
+                <div style="font-size: 14px; font-weight: bold; color: #7c5b53; margin-bottom: 8px;">【${category.category}】</div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+                    ${category.sounds.map(sound => `
+                        <button onclick="app.insertAdultSound('${sound.label}')" 
+                                style="padding: 12px 8px; background: #c85a8b; color: white; border: none; border-radius: 8px; font-size: 13px; font-weight: bold;">
+                            ${sound.label}
+                        </button>
+                    `).join('')}
+                </div>
+            </div>
+        `;
+    });
+
+    const modal = document.createElement('div');
+    modal.className = 'modal active';
+    modal.innerHTML = `
+        <div class="modal-content" style="max-height: 85vh;">
+            <div class="modal-header" style="background: linear-gradient(to right, #c85a8b, #d87aa0);">
+                <div class="modal-title">🔞 アダルト効果音</div>
+                <button class="modal-close" onclick="this.closest('.modal').remove()">×</button>
+            </div>
+            <div class="modal-body" style="overflow-y: auto;">
+                ${buttonsHtml}
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+},
+
+insertAdultSound(soundText) {
+    this.insertText(`♡${soundText}//`);
+    document.querySelector('.modal').remove();
+},
+
+openCreativeSlot() {
+    this.showCreativeSlotModal();
+},
+
+showCreativeSlotModal() {
+    const slotData = {
+        Kisetsu: ['春', '夏', '秋', '冬'],
+        Jikan: ['朝', '昼', '夕方', '夜', '深夜'],
+        Tenkou: ['晴れ', '曇り', '雨', '雪', '嵐'],
+        Basho: ['家', '学校', '会社', 'ホテル', '温泉', 'プール'],
+        Janru: ['ファンタジー', '現代', '未来', 'SF', '歴史', 'パラレル'],
+        Kankei: ['恋人', '夫婦', '婚約者', '不倫', '初対面', '友人'],
+        Aitemo: ['なし', 'ローション', '手錠', 'バイブ', 'ロープ', 'アイマスク'],
+        Sichue: ['偶然の出会い', '密室', '盗撮', '強制', '合意', '交渉'],
+        PureiA: ['前戯', 'キス', '愛撫', '脱衣', 'マッサージ'],
+        PureiB: ['挿入', 'ピストン', '騎乗位', 'バック', '側位'],
+        PureiC: ['オーラル', '手コキ', 'その他', 'クンニ', 'フェラ']
+    };
+
+    this._slotData = slotData;
+
+    const modal = document.createElement('div');
+    modal.className = 'modal active';
+    modal.innerHTML = `
+        <div class="modal-content" style="max-height: 85vh;">
+            <div class="modal-header" style="background: linear-gradient(to right, #a87b5a, #c4a88b);">
+                <div class="modal-title">🎰 創作支援スロット</div>
+                <button class="modal-close" onclick="this.closest('.modal').remove()">×</button>
+            </div>
+            <div class="modal-body" style="overflow-y: auto;">
+                <div style="display: flex; gap: 15px; margin-bottom: 15px;">
+                    <label style="display: flex; align-items: center; gap: 5px;">
+                        <input type="radio" name="slotRating" value="general" checked onchange="app.toggleSlotRating()">
+                        <span>全年齢向け</span>
+                    </label>
+                    <label style="display: flex; align-items: center; gap: 5px;">
+                        <input type="radio" name="slotRating" value="adult" onchange="app.toggleSlotRating()">
+                        <span>成人向け</span>
+                    </label>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr; gap: 10px; margin-bottom: 15px;">
+                    ${this.createSlotItem('季節', 'Kisetsu')}
+                    ${this.createSlotItem('時間帯', 'Jikan')}
+                    ${this.createSlotItem('天候', 'Tenkou')}
+                    ${this.createSlotItem('場所', 'Basho')}
+                    ${this.createSlotItem('ジャンル', 'Janru')}
+                    ${this.createSlotItem('関係', 'Kankei')}
+                    ${this.createSlotItem('シチュエーション', 'Sichue')}
+                </div>
+
+                <div id="adultSlotSection" style="display: none; grid-template-columns: 1fr; gap: 10px; margin-bottom: 15px;">
+                    ${this.createSlotItem('アイテム', 'Aitemo')}
+                    ${this.createSlotItem('プレイA (前戯)', 'PureiA')}
+                    ${this.createSlotItem('プレイB (本番)', 'PureiB')}
+                    ${this.createSlotItem('プレイC (その他)', 'PureiC')}
+                </div>
+
+                <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+                    <button onclick="app.spinAllSlots()" 
+                            style="flex: 1; padding: 12px; background: #7c5b53; color: white; border: none; border-radius: 10px; font-size: 14px; font-weight: bold;">
+                        全て回す
+                    </button>
+                    <button onclick="app.clearAllSlots()" 
+                            style="flex: 1; padding: 12px; background: #999; color: white; border: none; border-radius: 10px; font-size: 14px; font-weight: bold;">
+                        クリア
+                    </button>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="modal-btn modal-btn-primary" onclick="app.insertSlotToMemo()">メモに挿入</button>
+                <button class="modal-btn modal-btn-secondary" onclick="this.closest('.modal').remove()">閉じる</button>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+},
+
+createSlotItem(label, key) {
+    return `
+        <div style="background: white; padding: 10px; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+            <div style="font-size: 12px; font-weight: bold; color: #7c5b53; margin-bottom: 5px;">${label}</div>
+            <div style="display: flex; gap: 8px; align-items: center;">
+                <div id="slot-${key}" style="flex: 1; padding: 8px; background: #f9f9f9; border: 1px solid #c4a88b; border-radius: 6px; font-size: 14px; text-align: center; min-height: 36px; display: flex; align-items: center; justify-content: center;"></div>
+                <button onclick="app.spinSlot('${key}')" 
+                        style="padding: 8px 12px; background: #a87b5a; color: white; border: none; border-radius: 6px; font-size: 16px; font-weight: bold;">
+                    🎰
+                </button>
+            </div>
+        </div>
+    `;
+},
+
+toggleSlotRating() {
+    const isAdult = document.querySelector('input[name="slotRating"]:checked').value === 'adult';
+    const adultSection = document.getElementById('adultSlotSection');
+    if (isAdult) {
+        adultSection.style.display = 'grid';
+    } else {
+        adultSection.style.display = 'none';
+        ['Aitemo', 'PureiA', 'PureiB', 'PureiC'].forEach(key => {
+            const elem = document.getElementById(`slot-${key}`);
+            if (elem) elem.textContent = '';
+        });
+    }
+},
+
+spinSlot(category) {
+    if (!this._slotData || !this._slotData[category]) return;
+    
+    const items = this._slotData[category];
+    const randomItem = items[Math.floor(Math.random() * items.length)];
+    
+    const resultElem = document.getElementById(`slot-${category}`);
+    if (resultElem) {
+        resultElem.textContent = randomItem;
+    }
+},
+
+spinAllSlots() {
+    const isAdult = document.querySelector('input[name="slotRating"]:checked').value === 'adult';
+    
+    ['Kisetsu', 'Jikan', 'Tenkou', 'Basho', 'Janru', 'Kankei', 'Sichue'].forEach(key => {
+        this.spinSlot(key);
+    });
+    
+    if (isAdult) {
+        ['Aitemo', 'PureiA', 'PureiB', 'PureiC'].forEach(key => {
+            this.spinSlot(key);
+        });
+    }
+},
+
+clearAllSlots() {
+    ['Kisetsu', 'Jikan', 'Tenkou', 'Basho', 'Janru', 'Kankei', 'Aitemo', 'Sichue', 'PureiA', 'PureiB', 'PureiC'].forEach(key => {
+        const elem = document.getElementById(`slot-${key}`);
+        if (elem) elem.textContent = '';
+    });
+},
+
+insertSlotToMemo() {
+    const isAdult = document.querySelector('input[name="slotRating"]:checked').value === 'adult';
+    
+    const getSlotValue = (key) => {
+        const elem = document.getElementById(`slot-${key}`);
+        return elem ? elem.textContent : '';
+    };
+
+    let result = `===== 創作支援スロット結果 (${isAdult ? '成人向け' : '全年齢'}) =====\n`;
+    result += `作成日時: ${new Date().toLocaleString('ja-JP')}\n\n`;
+    result += `【シーン設定】\n`;
+    result += `季節: ${getSlotValue('Kisetsu')}\n`;
+    result += `時間帯: ${getSlotValue('Jikan')}\n`;
+    result += `天候: ${getSlotValue('Tenkou')}\n`;
+    result += `場所: ${getSlotValue('Basho')}\n\n`;
+    result += `【ストーリー要素】\n`;
+    result += `ジャンル: ${getSlotValue('Janru')}\n`;
+    result += `関係: ${getSlotValue('Kankei')}\n`;
+    
+    if (isAdult) {
+        result += `アイテム: ${getSlotValue('Aitemo')}\n`;
+    }
+    
+    result += `シチュエーション: ${getSlotValue('Sichue')}\n`;
+    
+    if (isAdult) {
+        result += `\n【プレイ内容】\n`;
+        result += `プレイA: ${getSlotValue('PureiA')}\n`;
+        result += `プレイB: ${getSlotValue('PureiB')}\n`;
+        result += `プレイC: ${getSlotValue('PureiC')}\n`;
+    }
+    
+    result += `================================\n`;
+
+    const memoEditor = document.getElementById('memoEditorTab');
+    const currentMemo = memoEditor.value;
+    
+    if (currentMemo) {
+        memoEditor.value = currentMemo + '\n\n' + result;
+    } else {
+        memoEditor.value = result;
+    }
+    
+    if (this.currentProject) {
+        localStorage.setItem(`memo_${this.currentProject}`, memoEditor.value);
+    }
+    
+    document.querySelector('.modal').remove();
+    this.switchTab(2);
+},
+
+openReplace() {
+    this.showReplaceModal();
+},
+
+showReplaceModal() {
+    const modal = document.createElement('div');
+    modal.className = 'modal active';
+    modal.innerHTML = `
+        <div class="modal-content" style="max-height: 85vh;">
+            <div class="modal-header">
+                <div class="modal-title">🔄 文字置換</div>
+                <button class="modal-close" onclick="this.closest('.modal').remove()">×</button>
+            </div>
+            <div class="modal-body" style="overflow-y: auto;">
+                <div style="margin-bottom: 15px;">
+                    <div style="font-weight: bold; margin-bottom: 8px; color: #7c5b53;">置換前の文字列（1行に1つ）</div>
+                    <textarea id="replaceFromText" 
+                              style="width: 100%; height: 120px; padding: 10px; border: 1px solid #c4a88b; border-radius: 8px; font-size: 13px; resize: vertical; background: white;" 
+                              placeholder="例：&#10;太郎&#10;花子&#10;次郎"></textarea>
+                    <div style="font-size: 11px; color: #666; margin-top: 5px; line-height: 1.4;">
+                        💡 複数の文字列を一度に置換できます。1行に1つずつ入力してください。
+                    </div>
+                </div>
+
+                <div style="margin-bottom: 15px;">
+                    <div style="font-weight: bold; margin-bottom: 8px; color: #7c5b53;">置換後の文字列（1行に1つ）</div>
+                    <textarea id="replaceToText" 
+                              style="width: 100%; height: 120px; padding: 10px; border: 1px solid #c4a88b; border-radius: 8px; font-size: 13px; resize: vertical; background: white;" 
+                              placeholder="例：&#10;田中太郎&#10;佐藤花子&#10;鈴木次郎"></textarea>
+                    <div style="font-size: 11px; color: #666; margin-top: 5px; line-height: 1.4;">
+                        ⚠️ 置換前と同じ行数を入力してください。
+                    </div>
+                </div>
+
+                <div style="display: flex; gap: 15px; margin-bottom: 15px;">
+                    <label style="display: flex; align-items: center; gap: 5px;">
+                        <input type="radio" name="replaceRange" value="current" checked>
+                        <span>現在のシーンのみ</span>
+                    </label>
+                    <label style="display: flex; align-items: center; gap: 5px;">
+                        <input type="radio" name="replaceRange" value="all">
+                        <span>全シーン</span>
+                    </label>
+                </div>
+
+                <div id="replaceResult" style="padding: 10px; background: white; border-radius: 8px; font-size: 12px; min-height: 40px; margin-bottom: 15px;"></div>
+            </div>
+            <div class="modal-footer">
+                <button class="modal-btn modal-btn-primary" onclick="app.executeReplace()">置換実行</button>
+                <button class="modal-btn modal-btn-secondary" onclick="this.closest('.modal').remove()">キャンセル</button>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+},
+
+executeReplace() {
+    const fromText = document.getElementById('replaceFromText').value;
+    const toText = document.getElementById('replaceToText').value;
+    const range = document.querySelector('input[name="replaceRange"]:checked').value;
+    const resultDiv = document.getElementById('replaceResult');
+
+    if (!fromText.trim()) {
+        resultDiv.innerHTML = '<span style="color: orange;">⚠️ 置換前の文字列を入力してください。</span>';
+        return;
+    }
+
+    const fromLines = fromText.split('\n');
+    const toLines = toText.split('\n');
+
+    if (fromLines.length !== toLines.length) {
+        resultDiv.innerHTML = `<span style="color: red;">❌ エラー: 置換前（${fromLines.length}行）と置換後（${toLines.length}行）の行数が一致しません。</span>`;
+        return;
+    }
+
+    const replacePairs = [];
+    for (let i = 0; i < fromLines.length; i++) {
+        if (fromLines[i]) {
+            replacePairs.push({
+                from: fromLines[i],
+                to: toLines[i] || ''
+            });
+        }
+    }
+
+    if (replacePairs.length === 0) {
+        resultDiv.innerHTML = '<span style="color: orange;">⚠️ 有効な置換ペアがありません。</span>';
+        return;
+    }
+
+    let totalReplacedCount = 0;
+    let affectedScenes = 0;
+
+    const sections = range === 'current' 
+        ? [this.cuts[this.currentCut]]
+        : this.cuts;
+
+    sections.forEach((section, index) => {
+        if (!section.content) return;
+        
+        let content = section.content;
+        let sectionReplacedCount = 0;
+
+        replacePairs.forEach(pair => {
+            const regex = new RegExp(pair.from.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g');
+            const matches = content.match(regex);
+            const count = matches ? matches.length : 0;
+            
+            if (count > 0) {
+                content = content.split(pair.from).join(pair.to);
+                sectionReplacedCount += count;
+            }
+        });
+
+        if (sectionReplacedCount > 0) {
+            section.content = content;
+            totalReplacedCount += sectionReplacedCount;
+            affectedScenes++;
+
+            if (range === 'current' || index === this.currentCut) {
+                document.getElementById('contentEditor').value = content;
+                this.saveCutContent();
+                this.updateCharCount();
+            }
+        }
+    });
+
+    if (totalReplacedCount > 0) {
+        const rangeText = range === 'current' ? '現在のシーン' : `${affectedScenes}個のシーン`;
+        resultDiv.innerHTML = `<span style="color: green; font-weight: bold;">✓ ${rangeText}で ${totalReplacedCount} 箇所を置換しました。</span>`;
+    } else {
+        resultDiv.innerHTML = '<span style="color: orange;">該当する文字列が見つかりませんでした。</span>';
+    }
+},
+
+openDialogueNumbers() {
+    const editor = document.getElementById('contentEditor');
+    const currentText = editor.value;
+
+    if (!currentText) {
+        alert('テキストが入力されていません。');
+        return;
+    }
+
+    try {
+        const regexLeadingNumber = /^\s*(\d{3})\s+/;
+        let lines = currentText.split('\n');
+        let firstNumber = null;
+
+        for (let i = 0; i < lines.length; i++) {
+            const match = lines[i].match(regexLeadingNumber);
+            if (match && !firstNumber) {
+                firstNumber = parseInt(match[1]);
+            }
+            lines[i] = lines[i].replace(regexLeadingNumber, '');
+        }
+
+        const regexA_NameColon = /^\s*[^：\r\n]+：/;
+        const regexB_NameOpenQ = /^\s*[^「\r\n]+「/;
+        const regexC_HashWord = /^\s*＃\S+/;
+
+        let counter = firstNumber || 1;
+        let dialogCount = 0;
+
+        for (let i = 0; i < lines.length; i++) {
+            const line = lines[i];
+            
+            const isDialog = 
+                regexA_NameColon.test(line) ||
+                regexB_NameOpenQ.test(line) ||
+                regexC_HashWord.test(line);
+
+            if (isDialog) {
+                lines[i] = String(counter).padStart(3, '0') + ' ' + line;
+                counter++;
+                dialogCount++;
+            }
+        }
+
+        const result = lines.join('\n');
+        editor.value = result;
+        
+        this.saveCutContent();
+        this.updateCharCount();
+
+        const startMsg = firstNumber ? `（${String(firstNumber).padStart(3, '0')}から開始）` : '（001から開始）';
+        alert(`✅ 台詞に連番を付与しました。${startMsg}\n台詞数: ${dialogCount}件`);
+
+    } catch (ex) {
+        alert(`台詞連番付与中にエラーが発生しました: ${ex.message}`);
+    }
+},
+    
+showAnalysis() {
+    this.showAnalysisModal();
+},
+
+showAnalysisModal() {
+    const modal = document.createElement('div');
+    modal.className = 'modal active';
+    modal.innerHTML = `
+        <div class="modal-content" style="max-height: 90vh;">
+            <div class="modal-header">
+                <div class="modal-title">📊 分析ツール</div>
+                <button class="modal-close" onclick="this.closest('.modal').remove()">×</button>
+            </div>
+            <div class="modal-body" style="overflow-y: auto; padding: 20px;">
+                <!-- 文字数計算セクション -->
+                <div style="margin-bottom: 30px;">
+                    <div style="font-size: 16px; font-weight: bold; color: #7c5b53; margin-bottom: 15px; padding-bottom: 8px; border-bottom: 2px solid #e7d0a9;">
+                        💰 文字数計算
+                    </div>
+                    
+                    <div style="margin-bottom: 15px;">
+                        <label style="display: block; font-size: 13px; font-weight: bold; color: #7c5b53; margin-bottom: 5px;">
+                            単価（円/文字）
+                        </label>
+                        <input type="number" id="charPriceInput" value="1" min="0" step="0.1" 
+                               style="width: 100%; padding: 10px; border: 1px solid #c4a88b; border-radius: 8px; font-size: 14px;">
+                    </div>
+                    
+                    <button onclick="app.calculateCharStats()" 
+                            style="width: 100%; padding: 12px; background: #7c5b53; color: white; border: none; border-radius: 10px; font-size: 15px; font-weight: bold; margin-bottom: 15px;">
+                        計算
+                    </button>
+                    
+                    <div id="charStatsResult" style="display: none;">
+                        <div id="charStatsCards" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 15px;"></div>
+                        <div id="charStatsTable"></div>
+                    </div>
+                </div>
+                
+                <!-- 声優依頼文セクション -->
+                <div>
+                    <div style="font-size: 16px; font-weight: bold; color: #7c5b53; margin-bottom: 15px; padding-bottom: 8px; border-bottom: 2px solid #e7d0a9;">
+                        📝 声優依頼文生成
+                    </div>
+                    
+                    <div style="margin-bottom: 15px;">
+                        <label style="display: block; font-size: 13px; font-weight: bold; color: #7c5b53; margin-bottom: 5px;">
+                            声優単価（円/文字）
+                        </label>
+                        <input type="number" id="voicePriceInput" value="1" min="0" step="0.1"
+                               style="width: 100%; padding: 10px; border: 1px solid #c4a88b; border-radius: 8px; font-size: 14px;">
+                    </div>
+                    
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px;">
+                        <div>
+                            <label style="display: block; font-size: 13px; font-weight: bold; color: #7c5b53; margin-bottom: 5px;">
+                                締め切り
+                            </label>
+                            <input type="date" id="voiceDeadlineInput"
+                                   style="width: 100%; padding: 10px; border: 1px solid #c4a88b; border-radius: 8px; font-size: 14px;">
+                        </div>
+                        <div>
+                            <label style="display: block; font-size: 13px; font-weight: bold; color: #7c5b53; margin-bottom: 5px;">
+                                支払日
+                            </label>
+                            <input type="date" id="voicePaymentInput"
+                                   style="width: 100%; padding: 10px; border: 1px solid #c4a88b; border-radius: 8px; font-size: 14px;">
+                        </div>
+                    </div>
+                    
+                    <button onclick="app.generateVoiceRequest()" 
+                            style="width: 100%; padding: 12px; background: #c85a8b; color: white; border: none; border-radius: 10px; font-size: 15px; font-weight: bold; margin-bottom: 15px;">
+                        依頼文生成
+                    </button>
+                    
+                    <div id="voiceRequestResult" style="display: none;">
+                        <div style="background: #f9f9f9; padding: 15px; border-radius: 8px; font-family: monospace; font-size: 12px; line-height: 1.6; white-space: pre-wrap; max-height: 400px; overflow-y: auto; margin-bottom: 15px;" id="voiceRequestPreview"></div>
+                        <button onclick="app.copyVoiceRequest()" 
+                                style="width: 100%; padding: 12px; background: #6b8b5a; color: white; border: none; border-radius: 10px; font-size: 15px; font-weight: bold;">
+                            📋 コピー
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+    
+    // デフォルト日付設定
+    const today = new Date();
+    const deadline = new Date(today);
+    deadline.setDate(deadline.getDate() + 14);
+    const payment = new Date(today);
+    payment.setDate(payment.getDate() + 21);
+    
+    document.getElementById('voiceDeadlineInput').value = deadline.toISOString().split('T')[0];
+    document.getElementById('voicePaymentInput').value = payment.toISOString().split('T')[0];
+    
+    this.hideMenu();
+},
+
+calculateCharStats() {
+    const charPrice = parseFloat(document.getElementById('charPriceInput').value) || 1;
+    
+    const charDict = {};
+    
+    this.cuts.forEach(section => {
+        if (!section.content) return;
+        
+        const lines = section.content.split('\n');
+        
+        lines.forEach(line => {
+            const trimmed = line.trim();
+            const lineWithoutNumber = trimmed.replace(/^\d{3}\s+/, '').trim();
+            
+            if (lineWithoutNumber.startsWith('☆効果音') ||
+                lineWithoutNumber.startsWith('☆BGM') ||
+                lineWithoutNumber.startsWith('☆環境音')) {
+                return;
+            }
+            
+            let charName = null;
+            let dialogue = null;
+            
+            if (lineWithoutNumber.includes('：')) {
+                const colonIndex = lineWithoutNumber.indexOf('：');
+                charName = lineWithoutNumber.substring(0, colonIndex).trim();
+                dialogue = lineWithoutNumber.substring(colonIndex + 1).trim();
+            } else if (lineWithoutNumber.match(/^([^「]+)「(.+)」$/)) {
+                const match = lineWithoutNumber.match(/^([^「]+)「(.+)」$/);
+                charName = match[1].trim();
+                dialogue = match[2];
+            }
+            
+            if (charName && dialogue) {
+                if (!charDict[charName]) charDict[charName] = 0;
+                charDict[charName] += dialogue.length;
+            }
+        });
+    });
+    
+    const totalChars = Object.values(charDict).reduce((sum, count) => sum + count, 0);
+    const totalPrice = totalChars * charPrice;
+    const charCount = Object.keys(charDict).length;
+    
+    // カード表示
+    const cards = document.getElementById('charStatsCards');
+    cards.innerHTML = `
+        <div style="background: linear-gradient(135deg, #7c5b53 0%, #a0795f 100%); color: white; padding: 15px; border-radius: 10px; text-align: center;">
+            <div style="font-size: 10px; color: #e7d0a9; margin-bottom: 5px;">総文字数</div>
+            <div style="font-size: 20px; font-weight: bold;">${totalChars.toLocaleString()}</div>
+            <div style="font-size: 11px; color: #e7d0a9;">文字</div>
+        </div>
+        <div style="background: linear-gradient(135deg, #7c5b53 0%, #a0795f 100%); color: white; padding: 15px; border-radius: 10px; text-align: center;">
+            <div style="font-size: 10px; color: #e7d0a9; margin-bottom: 5px;">キャラ数</div>
+            <div style="font-size: 20px; font-weight: bold;">${charCount}</div>
+            <div style="font-size: 11px; color: #e7d0a9;">人</div>
+        </div>
+        <div style="background: linear-gradient(135deg, #7c5b53 0%, #a0795f 100%); color: white; padding: 15px; border-radius: 10px; text-align: center;">
+            <div style="font-size: 10px; color: #e7d0a9; margin-bottom: 5px;">合計金額</div>
+            <div style="font-size: 20px; font-weight: bold;">¥${totalPrice.toLocaleString()}</div>
+        </div>
+    `;
+    
+    // テーブル表示
+    let table = '<div style="overflow-x: auto; margin-top: 15px;"><table style="width: 100%; border-collapse: collapse; font-size: 13px;">';
+    table += '<thead><tr style="background: #7c5b53; color: white;"><th style="padding: 10px; text-align: left;">キャラクター</th><th style="padding: 10px; text-align: right;">文字数</th><th style="padding: 10px; text-align: right;">金額</th></tr></thead><tbody>';
+    
+    Object.entries(charDict)
+        .sort((a, b) => b[1] - a[1])
+        .forEach(([name, count], index) => {
+            const price = count * charPrice;
+            const bgColor = index % 2 === 0 ? '#f9f9f9' : 'white';
+            table += `<tr style="background: ${bgColor}; border-bottom: 1px solid #e0e0e0;"><td style="padding: 8px;"><strong>${name}</strong></td><td style="padding: 8px; text-align: right;">${count.toLocaleString()}文字</td><td style="padding: 8px; text-align: right;">¥${price.toLocaleString()}</td></tr>`;
+        });
+    
+    table += '</tbody></table></div>';
+    
+    document.getElementById('charStatsTable').innerHTML = table;
+    document.getElementById('charStatsResult').style.display = 'block';
+    
+    this._currentCharStats = { charDict, totalChars, totalPrice, charCount, charPrice };
+},
+
+generateVoiceRequest() {
+    const voicePrice = parseFloat(document.getElementById('voicePriceInput').value) || 1;
+    const deadline = document.getElementById('voiceDeadlineInput').value;
+    const payment = document.getElementById('voicePaymentInput').value;
+    
+    const charDict = {};
+    const lineNumbers = {};
+    
+    this.cuts.forEach((section) => {
+        if (!section.content) return;
+        
+        const lines = section.content.split('\n');
+        let lineNumber = 1;
+        
+        lines.forEach(line => {
+            const trimmed = line.trim();
+            const lineWithoutNumber = trimmed.replace(/^\d{3}\s+/, '').trim();
+            
+            if (lineWithoutNumber.startsWith('☆効果音') ||
+                lineWithoutNumber.startsWith('☆BGM') ||
+                lineWithoutNumber.startsWith('☆環境音')) {
+                return;
+            }
+            
+            const hasNumber = /^\d{3}\s+/.test(trimmed);
+            
+            if (hasNumber) {
+                let charName = null;
+                let dialogue = null;
+                
+                if (lineWithoutNumber.includes('：')) {
+                    const colonIndex = lineWithoutNumber.indexOf('：');
+                    charName = lineWithoutNumber.substring(0, colonIndex).trim();
+                    dialogue = lineWithoutNumber.substring(colonIndex + 1).trim();
+                } else if (lineWithoutNumber.match(/^([^「]+)「(.+)」$/)) {
+                    const match = lineWithoutNumber.match(/^([^「]+)「(.+)」$/);
+                    charName = match[1].trim();
+                    dialogue = match[2];
+                }
+                
+                if (charName && dialogue) {
+                    if (!charDict[charName]) {
+                        charDict[charName] = 0;
+                        lineNumbers[charName] = [];
+                    }
+                    charDict[charName] += dialogue.length;
+                    lineNumbers[charName].push(String(lineNumber).padStart(3, '0'));
+                }
+                
+                lineNumber++;
+            }
+        });
+    });
+    
+    let request = 'お世話になっております。\n\n';
+    request += 'この度、音声収録のご案内をさせていただきたく連絡いたしました。\n';
+    request += '下記の内容にて収録の上、ご提出いただけますと幸いです。\n\n';
+    request += '【ご依頼内容】\n';
+    request += '━━━━━━━━━━━━━━━━━━━━━\n\n';
+    
+    Object.entries(charDict)
+        .sort((a, b) => b[1] - a[1])
+        .forEach(([name, count]) => {
+            const price = count * voicePrice;
+            const lines = lineNumbers[name] || [];
+            
+            request += `■ キャラクター名\n`;
+            request += `  ${name}\n\n`;
+            request += `■ 収録文字数\n`;
+            request += `  ${count.toLocaleString()}文字\n\n`;
+            
+            if (lines.length > 0) {
+                request += `■ 収録対象セリフ番号\n`;
+                lines.forEach(line => {
+                    request += `  ${line}\n`;
+                });
+                request += '\n';
+            }
+            
+            request += `■ お支払い金額\n`;
+            request += `  ¥${price.toLocaleString()}（単価：¥${voicePrice}/文字）\n\n`;
+        });
+    
+    request += `■ 納品期限\n`;
+    request += `  ${deadline}まで\n\n`;
+    request += `■ お支払い期日\n`;
+    request += `  ${payment}\n`;
+    request += `  ※納品確認後、上記期日までにお支払いいたします\n\n`;
+    request += `■ 音声形式\n`;
+    request += `  ・サンプリングレート：48000Hz\n`;
+    request += `  ・ビット深度：16bit\n`;
+    request += `  ・チャンネル：モノラル\n`;
+    request += `  ・ファイル形式：wav\n\n`;
+    request += `■ 納品方法\n`;
+    request += `  ギガファイル便での提出をお願いいたします。\n\n`;
+    request += `■ 納品フォルダ名\n`;
+    request += `  音声ファイル\n\n`;
+    request += `■ ファイル命名規則\n`;
+    request += `  「セリフ番号_キャラクター名.wav」の形式でお願いいたします。\n`;
+    request += `  例：001_キャラクター名.wav\n\n`;
+    request += '━━━━━━━━━━━━━━━━━━━━━\n\n';
+    request += '【収録にあたってのお願い】\n';
+    request += '・ノイズが入らない静かな環境での収録をお願いいたします。\n';
+    request += '・各ファイルの冒頭と末尾に0.5秒程度の無音部分を入れてください。\n';
+    request += '・リテイクがある場合は別ファイルとして保存してください。\n\n';
+    request += 'ご不明な点がございましたら、お気軽にお問い合わせください。\n';
+    request += 'お忙しいところ恐れ入りますが、ご確認のほどよろしくお願いいたします。\n\n';
+    request += '何卒よろしくお願いいたします。';
+    
+    document.getElementById('voiceRequestPreview').textContent = request;
+    document.getElementById('voiceRequestResult').style.display = 'block';
+    this._currentVoiceRequest = request;
+},
+
+copyVoiceRequest() {
+    if (!this._currentVoiceRequest) {
+        alert('先に依頼文を生成してください');
+        return;
+    }
+    
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(this._currentVoiceRequest).then(() => {
+            alert('✅ 依頼文をクリップボードにコピーしました！');
+        }).catch(() => {
+            this.fallbackCopy(this._currentVoiceRequest);
+        });
+    } else {
+        this.fallbackCopy(this._currentVoiceRequest);
+    }
+},
+
+fallbackCopy(text) {
+    const textarea = document.createElement('textarea');
+    textarea.value = text;
+    textarea.style.position = 'fixed';
+    textarea.style.opacity = '0';
+    document.body.appendChild(textarea);
+    textarea.select();
+    
+    try {
+        document.execCommand('copy');
+        alert('✅ 依頼文をクリップボードにコピーしました！');
+    } catch (err) {
+        alert('コピーに失敗しました。手動でコピーしてください。');
+    }
+    
+    document.body.removeChild(textarea);
+},    
+    downloadFile(content, filename, mimeType) {
+        this.copyToClipboardWithInstructions(content, filename);
+    },
+    
+    copyToClipboardWithInstructions(content, filename) {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(content).then(() => {
+                this.showSaveInstructions(filename);
+            }).catch(err => {
+                console.error('Clipboard error:', err);
+                this.copyToClipboardFallback(content, filename);
+            });
+        } else {
+            this.copyToClipboardFallback(content, filename);
+        }
+    },
+    
+    showSaveInstructions(filename) {
+        const isProject = filename.endsWith('.vwp');
+        
+        let message = `✅ 「${filename}」をコピーしました！\n\n`;
+        
+        if (isProject) {
+            message += `【プロジェクトの保存方法】\n\n`;
+            message += `1️⃣ メモアプリを開く\n`;
+            message += `2️⃣ 新規メモを作成\n`;
+            message += `3️⃣ 長押しして「ペースト」\n`;
+            message += `4️⃣ タイトルを「${filename}」に変更\n`;
+            message += `5️⃣ 保存完了！\n\n`;
+            message += `【読み込み方法】\n`;
+            message += `メニュー → プロジェクトを読み込む → メモの内容を全選択してコピー → テキストエリアに貼り付け → 読み込むボタンをタップ\n\n`;
+            message += `💡 メールで自分宛に送信してPCで受け取ることもできます`;
+        } else {
+            message += `【テキストファイルの保存方法】\n\n`;
+            message += `1️⃣ メモアプリを開く\n`;
+            message += `2️⃣ 新規メモを作成\n`;
+            message += `3️⃣ 長押しして「ペースト」\n`;
+            message += `4️⃣ タイトルを「${filename}」に変更\n`;
+            message += `5️⃣ 保存完了！\n\n`;
+            message += `💡 そのままメールで送信することもできます`;
+        }
+        
+        alert(message);
+    },
+    
+    copyToClipboardFallback(content, filename) {
+        const textarea = document.createElement('textarea');
+        textarea.value = content;
+        textarea.style.position = 'fixed';
+        textarea.style.opacity = '0';
+        document.body.appendChild(textarea);
+        textarea.select();
+        
+        try {
+            const success = document.execCommand('copy');
+            if (success) {
+                this.showSaveInstructions(filename);
+            } else {
+                alert('コピーに失敗しました。');
+            }
+        } catch (err) {
+            alert('コピーに失敗しました。');
+        }
+        
+        document.body.removeChild(textarea);
+    }
+};
+
+document.addEventListener('DOMContentLoaded', () => {
+    app.init();
+});
+
+if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('/sw.js').catch(() => {});
+}
+    </script>
+</body>
+</html>
+
