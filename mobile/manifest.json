@@ -1,6 +1,6 @@
 {
   "name": "Scene*Writer Mobile",
-  "short_name": "SW Mobile",
+  "short_name": "Scene*Writer",
   "description": "Scene*Writer スマホ版 - どこでもシナリオ執筆",
   "start_url": "/scene-writer/mobile/",
   "scope": "/scene-writer/mobile/",
