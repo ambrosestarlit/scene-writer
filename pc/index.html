@@ -1,0 +1,851 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scene*Writer - シナリオ編集ツール</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: "MS Gothic", monospace; background: #e7d0a9; }
+        .app-container { display: flex; flex-direction: column; height: 100vh; background-color: #e7d0a9; }
+        .header { background: linear-gradient(to right, #7c5b53, #a0795f); color: white; padding: 8px 15px; display: flex; justify-content: space-between; align-items: center; font-size: 12px; }
+        .top-panel { display: grid; grid-template-columns: 140px 1fr 330px; gap: 10px; padding: 10px; background-color: #e7d0a9; }
+        .clock-panel { background: #7c5b53; color: white; padding: 8px; border-radius: 12px; text-align: center; font-size: 11px; display: flex; flex-direction: column; justify-content: center; }
+        .clock-time { font-size: 24px; font-weight: bold; margin: 3px 0; }
+        .clock-stats { font-size: 10px; color: #e7d0a9; margin-top: 8px; line-height: 1.6; }
+        .global-synopsis-box { background: white; padding: 8px; border-radius: 8px; display: flex; flex-direction: column; gap: 4px; }
+        .global-label { font-size: 10px; font-weight: bold; color: #7c5b53; }
+        .global-textarea { flex: 1; font-size: 11px; border: none; padding: 4px; max-height: 65px; resize: none; }
+        .project-info { display: flex; flex-direction: column; gap: 6px; }
+        .project-item { background: #7c5b53; padding: 8px; border-radius: 8px; }
+        .project-item label { font-size: 9px; color: #e7d0a9; font-weight: bold; display: block; margin-bottom: 4px; }
+        .project-item input { padding: 5px; border: none; border-radius: 4px; font-size: 11px; width: 100%; background: white; }
+        .menu-bar { background: linear-gradient(to right, #d4b89b, #c4a88b); padding: 6px 8px; display: flex; gap: 3px; flex-wrap: wrap; border-bottom: 1px solid #c4a88b; overflow-x: auto; font-size: 11px; }
+        .menu-btn { padding: 5px 10px; background: #7c5b53; color: white; border: none; border-radius: 3px; cursor: pointer; white-space: nowrap; }
+        .menu-separator { width: 1px; background: #7c5b53; opacity: 0.3; margin: 0 3px; }
+        .menu-label { color: #7c5b53; font-weight: bold; padding: 0 3px; }
+        .main-content { display: grid; grid-template-columns: 130px 1fr 130px 300px; gap: 10px; flex: 1; padding: 10px; overflow: hidden; }
+        .cut-panel { background: white; border-radius: 8px; padding: 8px; overflow-y: auto; display: flex; flex-direction: column; gap: 6px; font-size: 11px; }
+        .cut-title { font-weight: bold; color: #7c5b53; text-align: center; font-size: 11px; margin-bottom: 4px; }
+        .cut-count-section { display: flex; flex-direction: column; gap: 4px; margin-bottom: 4px; }
+        .cut-count-label { font-size: 10px; font-weight: bold; color: #7c5b53; text-align: center; }
+        .cut-count-select { padding: 4px; border: 1px solid #c4a88b; border-radius: 3px; font-size: 11px; background: white; }
+        .cut-apply-btn { padding: 4px; background: #7c5b53; color: white; border: none; border-radius: 3px; cursor: pointer; font-size: 10px; }
+        .cut-apply-btn:hover { background: #8b6a5b; }
+        .cut-button { padding: 5px; background: #8b6a5b; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 10px; }
+        .cut-info { background: #f5f5f5; padding: 6px; border-radius: 4px; text-align: center; font-size: 10px; }
+        .cut-info-label { font-weight: bold; color: #7c5b53; }
+        .cut-list { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 3px; }
+        .cut-item { padding: 5px 6px; background: #f9f9f9; border-left: 3px solid #7c5b53; cursor: pointer; font-size: 9px; border-radius: 2px; }
+        .cut-item.active { background: #7c5b53; color: white; font-weight: bold; }
+        .editor-panel { background: white; border-radius: 8px; overflow: hidden; display: flex; flex-direction: column; }
+        .editor-toolbar { background: #f8f8f8; border-bottom: 1px solid #e0e0e0; padding: 6px 8px; display: flex; gap: 6px; align-items: center; font-size: 11px; }
+        .char-button-panel { display: flex; gap: 3px; flex-wrap: wrap; margin-left: 8px; }
+        .char-button { padding: 3px 6px; background: #8b6a5b; color: white; border: none; border-radius: 3px; font-size: 9px; cursor: pointer; white-space: nowrap; }
+        .editor-textarea { flex: 1; font-family: "MS Gothic", monospace; font-size: 13px; border: none; padding: 8px; resize: none; }
+        .button-panel { background: white; border-radius: 8px; padding: 8px; overflow-y: auto; display: flex; flex-direction: column; gap: 4px; font-size: 10px; }
+        .side-button { padding: 5px 6px; border: none; border-radius: 4px; font-size: 10px; cursor: pointer; width: 100%; }
+        .brown-btn { background: #7c5b53; color: white; }
+        .green-btn { background: #6b8b5a; color: white; }
+        .pink-btn { background: #c85a8b; color: white; }
+        .red-btn { background: #b85a6b; color: white; }
+        .beige-btn { background: #a87b5a; color: white; }
+        .button-title { font-weight: bold; color: #7c5b53; margin: 4px 0 2px 0; }
+        .checkbox-label { display: flex; align-items: center; gap: 4px; margin: 3px 0; cursor: pointer; font-size: 10px; }
+        .right-panel { display: grid; grid-template-rows: 1fr 1fr; gap: 10px; }
+        .synopsis-box { background: white; border-radius: 8px; padding: 8px; overflow: hidden; display: flex; flex-direction: column; gap: 4px; }
+        .synopsis-title { font-size: 11px; font-weight: bold; color: #7c5b53; }
+        .synopsis-textarea { flex: 1; font-family: "MS Gothic", monospace; font-size: 11px; border: 1px solid #e0e0e0; padding: 4px; resize: none; }
+        .status-bar { background: linear-gradient(to right, #d4b89b, #c4a88b); padding: 5px 10px; font-size: 10px; color: #666; border-top: 1px solid #c4a88b; }
+        
+        /* ウェルカム画面のスタイル（WPF版に寄せたデザイン） */
+        .welcome-screen { 
+            position: fixed; 
+            top: 0; 
+            left: 0; 
+            right: 0; 
+            bottom: 0; 
+            background: rgba(0,0,0,0.2);
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            z-index: 1000;
+        }
+        .welcome-container {
+            background: #e7d0a9;
+            border: 2px solid #7c5b53;
+            border-radius: 12px;
+            width: 900px;
+            max-width: 95vw;
+            height: 600px;
+            max-height: 90vh;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        .welcome-header {
+            background: #7c5b53;
+            border-radius: 10px 10px 0 0;
+            height: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+        .welcome-header-content {
+            text-align: center;
+        }
+        .welcome-title {
+            font-size: 28px;
+            font-weight: bold;
+            color: white;
+        }
+        .welcome-subtitle {
+            font-size: 14px;
+            color: #e7d0a9;
+            margin-top: 5px;
+        }
+        .welcome-close {
+            position: absolute;
+            right: 10px;
+            top: 10px;
+            width: 30px;
+            height: 30px;
+            background: transparent;
+            border: none;
+            color: white;
+            font-size: 20px;
+            cursor: pointer;
+        }
+        .welcome-close:hover {
+            color: #e7d0a9;
+        }
+        .welcome-body {
+            flex: 1;
+            display: grid;
+            grid-template-columns: 200px 1fr;
+            gap: 20px;
+            padding: 20px;
+            overflow: hidden;
+        }
+        .welcome-menu {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .welcome-action-btn {
+            padding: 10px;
+            background: #7c5b53;
+            color: white;
+            border: none;
+            border-radius: 20px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .welcome-action-btn:hover {
+            background: #8b6a5b;
+        }
+        .welcome-action-btn:active {
+            background: #6c5b43;
+        }
+        .welcome-separator {
+            height: 1px;
+            background: #7c5b53;
+            margin: 10px 0;
+        }
+        .welcome-recent {
+            overflow-y: auto;
+        }
+        .welcome-recent-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: #7c5b53;
+            margin-bottom: 15px;
+        }
+        .welcome-recent-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .welcome-recent-item {
+            background: white;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 10px;
+            min-height: 80px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: grid;
+            grid-template-columns: auto 1fr auto;
+            gap: 10px;
+            align-items: center;
+        }
+        .welcome-recent-item:hover {
+            background: #f8f8f8;
+            border-color: #7c5b53;
+        }
+        .welcome-recent-icon {
+            width: 50px;
+            height: 50px;
+            background: #f0e6d2;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+        }
+        .welcome-recent-info {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+        .welcome-recent-name {
+            font-size: 16px;
+            font-weight: bold;
+            color: #333;
+        }
+        .welcome-recent-date {
+            font-size: 12px;
+            color: #999;
+        }
+        .welcome-recent-stats {
+            font-size: 11px;
+            color: #666;
+        }
+        .welcome-recent-delete {
+            width: 24px;
+            height: 24px;
+            background: transparent;
+            border: none;
+            color: #999;
+            font-size: 18px;
+            cursor: pointer;
+            padding: 0;
+            align-self: start;
+        }
+        .welcome-recent-delete:hover {
+            color: #ff3333;
+        }
+        .welcome-footer {
+            background: #7c5b53;
+            border-radius: 0 0 10px 10px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #e7d0a9;
+            font-size: 12px;
+        }
+        
+        /* ヘルプダイアログ */
+        .help-dialog {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+        }
+        .help-content {
+            background: white;
+            border-radius: 12px;
+            width: 700px;
+            max-width: 90vw;
+            max-height: 80vh;
+            overflow-y: auto;
+            padding: 30px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+        }
+        .help-title {
+            font-size: 24px;
+            font-weight: bold;
+            color: #7c5b53;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        .help-section {
+            margin-bottom: 25px;
+        }
+        .help-section-title {
+            font-size: 16px;
+            font-weight: bold;
+            color: #7c5b53;
+            margin-bottom: 10px;
+            padding: 5px 10px;
+            background: #f0e6d2;
+            border-radius: 5px;
+        }
+        .help-item {
+            margin-bottom: 8px;
+            padding-left: 20px;
+            line-height: 1.5;
+            font-size: 13px;
+        }
+        .help-shortcut {
+            display: inline-block;
+            background: #7c5b53;
+            color: white;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 11px;
+            margin-left: 5px;
+        }
+        .help-close-btn {
+            display: block;
+            margin: 20px auto 0;
+            padding: 10px 30px;
+            background: #7c5b53;
+            color: white;
+            border: none;
+            border-radius: 20px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .help-close-btn:hover {
+            background: #8b6a5b;
+        }
+        
+        ::-webkit-scrollbar { width: 6px; } 
+        ::-webkit-scrollbar-track { background: #f1f1f1; } 
+        ::-webkit-scrollbar-thumb { background: #c4a88b; }
+        @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+        @keyframes slideOut { from { transform: translateX(0); opacity: 1; } to { transform: translateX(100%); opacity: 0; } }
+    </style>
+</head>
+<body>
+    <div id="welcomeScreen" class="welcome-screen">
+        <div class="welcome-container">
+            <div class="welcome-header">
+                <div class="welcome-header-content">
+                    <div class="welcome-title">Scene＊Writer</div>
+                    <div class="welcome-subtitle">シーン構成型シナリオエディター</div>
+                </div>
+                <button class="welcome-close" onclick="app.closeWelcome()">×</button>
+            </div>
+            
+            <div class="welcome-body">
+                <div class="welcome-menu">
+                    <button class="welcome-action-btn" onclick="app.createNewProject()">新規プロジェクト</button>
+                    <button class="welcome-action-btn" onclick="app.loadProject()">既存ファイルを開く</button>
+                </div>
+                
+                <div class="welcome-recent">
+                    <div class="welcome-recent-title">最近のプロジェクト</div>
+                    <div class="welcome-recent-list" id="recentProjectsList"></div>
+                </div>
+            </div>
+            
+            <div class="welcome-footer">
+                ダブルクリックでプロジェクトを開く
+            </div>
+        </div>
+    </div>
+
+    <div id="helpDialog" class="help-dialog">
+        <div class="help-content">
+            <div class="help-title">🎬 Scene*Writer 使い方ガイド</div>
+            
+            <div class="help-section">
+                <div class="help-section-title">📝 基本操作</div>
+                <div class="help-item">• <strong>新規作成:</strong> ウェルカム画面またはメニューバーから「新規」をクリック</div>
+                <div class="help-item">• <strong>ファイル保存:</strong> メニューバーの「上書き保存」で現在の作業を保存</div>
+                <div class="help-item">• <strong>ファイル読込:</strong> メニューバーの「読込」で既存のプロジェクトを開く</div>
+                <div class="help-item">• <strong>エクスポート:</strong> JSON形式でプロジェクトデータを書き出し</div>
+                <div class="help-item">• <strong>TXT書出:</strong> テキストファイルとしてシナリオを出力</div>
+            </div>
+
+            <div class="help-section">
+                <div class="help-section-title">🎭 キャラクター管理</div>
+                <div class="help-item">• <strong>キャラクター登録:</strong> 「キャラ管理」ボタンから新規キャラクターを追加</div>
+                <div class="help-item">• <strong>キャラボタン:</strong> エディター上部にキャラクター名のボタンが自動生成</div>
+                <div class="help-item">• <strong>台詞挿入:</strong> キャラボタンをクリックで「キャラ名：」形式で挿入</div>
+                <div class="help-item">• <strong>括弧形式切替:</strong> チェックボックスで「」形式と：形式を切り替え可能</div>
+            </div>
+
+            <div class="help-section">
+                <div class="help-section-title">🎬 シーン管理</div>
+                <div class="help-item">• <strong>シーン数設定:</strong> メニューバーでシーン数を変更（1〜300）</div>
+                <div class="help-item">• <strong>シーン切替:</strong> 左側のリストまたはドロップダウンで選択</div>
+                <div class="help-item">• <strong>目標分数:</strong> 各シーンに目標となる尺（分数）を設定可能</div>
+                <div class="help-item">• <strong>文字数表示:</strong> 各シーンの文字数と推定時間を自動計算</div>
+                <div class="help-item">• <strong>シーン別あらすじ:</strong> 右側パネルで各シーンのあらすじを記入</div>
+            </div>
+
+            <div class="help-section">
+                <div class="help-section-title">🔊 音声効果・演出</div>
+                <div class="help-item">• <strong>ト書き:</strong> シーンの状況説明を挿入<span class="help-shortcut">ト書き</span></div>
+                <div class="help-item">• <strong>現在地:</strong> シーンの場所情報を挿入<span class="help-shortcut">現在地</span></div>
+                <div class="help-item">• <strong>効果音:</strong> SE（Sound Effect）を選択・挿入</div>
+                <div class="help-item">• <strong>BGM:</strong> 背景音楽の指定を挿入</div>
+                <div class="help-item">• <strong>環境音:</strong> 雨音、風音などの環境音を挿入</div>
+                <div class="help-item">• <strong>喘ぎ声:</strong> アダルトコンテンツ用の音声を生成<span class="help-shortcut">💕</span></div>
+                <div class="help-item">• <strong>アダルト効果音:</strong> R18コンテンツ用の効果音<span class="help-shortcut">🔞</span></div>
+                <div class="help-item">• <strong>創作スロット:</strong> ランダムな創作アイデア生成<span class="help-shortcut">🎰</span></div>
+            </div>
+
+            <div class="help-section">
+                <div class="help-section-title">📊 テキスト処理機能</div>
+                <div class="help-item">• <strong>文字置換:</strong> 一括で文字列を置き換え</div>
+                <div class="help-item">• <strong>台詞連番:</strong> 台詞に自動で番号を振る機能</div>
+                <div class="help-item">• <strong>文字数カウント:</strong> リアルタイムで文字数を表示</div>
+                <div class="help-item">• <strong>推定尺計算:</strong> 文字数から推定される再生時間を自動計算</div>
+            </div>
+
+            <div class="help-section">
+                <div class="help-section-title">📅 プロジェクト情報</div>
+                <div class="help-item">• <strong>作品タイトル:</strong> 右上のフィールドで作品名を設定</div>
+                <div class="help-item">• <strong>執筆期日:</strong> カレンダーボタンで締切日を設定</div>
+                <div class="help-item">• <strong>全体あらすじ:</strong> 上部中央で作品全体の概要を記入</div>
+                <div class="help-item">• <strong>メモ機能:</strong> 右下パネルで自由にメモを記入</div>
+            </div>
+
+            <div class="help-section">
+                <div class="help-section-title">⏰ 統計情報</div>
+                <div class="help-item">• <strong>時計表示:</strong> 左上に現在時刻を表示</div>
+                <div class="help-item">• <strong>総文字数:</strong> プロジェクト全体の文字数を表示</div>
+                <div class="help-item">• <strong>シーン別文字数:</strong> 現在選択中のシーンの文字数</div>
+                <div class="help-item">• <strong>目安の尺:</strong> 推定される全体の再生時間（分）</div>
+            </div>
+
+            <div class="help-section">
+                <div class="help-section-title">💾 データ管理</div>
+                <div class="help-item">• <strong>自動保存:</strong> 定期的に作業内容を自動保存</div>
+                <div class="help-item">• <strong>最近のプロジェクト:</strong> ウェルカム画面に最近使用したファイルを表示</div>
+                <div class="help-item">• <strong>プロジェクトフォルダ:</strong> 作業フォルダを自由に変更可能</div>
+                <div class="help-item">• <strong>エクスポート形式:</strong> JSON形式とTXT形式での出力に対応</div>
+            </div>
+
+            <div class="help-section">
+                <div class="help-section-title">🎨 インターフェース</div>
+                <div class="help-item">• <strong>チョコレート配色:</strong> 目に優しいブラウン系の配色</div>
+                <div class="help-item">• <strong>レスポンシブ:</strong> ウィンドウサイズに応じて自動調整</div>
+                <div class="help-item">• <strong>ドラッグ＆ドロップ:</strong> ファイルのドラッグ＆ドロップに対応</div>
+            </div>
+
+            <button class="help-close-btn" onclick="app.hideHelp()">閉じる</button>
+        </div>
+    </div>
+
+    <div id="mainApp" class="app-container" style="display: none;">
+        <div class="header">
+        </div>
+
+        <div class="top-panel">
+            <div class="clock-panel">
+                <div id="clockDate">2025/01/01(Wed)</div>
+                <div class="clock-time" id="clockTime">00:00</div>
+                <div class="clock-stats">
+                    <div>🎯 総合目標: <span id="totalTargetMinutes">0</span>分</div>
+                    <div>☕ 総合: <span id="totalCharCountClock">0</span>文字</div>
+                    <div>🍴 目安の尺: <span id="estimatedDuration">0</span>分</div>
+                </div>
+            </div>
+            <div class="global-synopsis-box">
+                <div class="global-label">全体あらすじ</div>
+                <textarea id="globalSynopsisEditor" class="global-textarea"></textarea>
+            </div>
+            <div class="project-info">
+                <div class="project-item">
+                    <label>作品タイトル</label>
+                    <input type="text" id="projectTitle">
+                </div>
+                <div class="project-item">
+                    <label>執筆期日</label>
+                    <div style="display: flex; gap: 3px;">
+                        <input type="text" id="deadlineDate" readonly style="flex: 1;">
+                        <button class="menu-btn" onclick="app.pickDate()" style="padding: 3px 6px;">📅</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="menu-bar">
+            <button class="menu-btn" onclick="app.createNewProject()">新規</button>
+            <button class="menu-btn" onclick="app.saveProject()">上書き保存</button>
+            <button class="menu-btn" onclick="app.loadProject()">読込</button>
+            <button class="menu-btn" onclick="app.exportProject()">エクスポート</button>
+            <button class="menu-btn" onclick="app.exportTxt()">TXT書出</button>
+            <div class="menu-separator"></div>
+            <button class="menu-btn" onclick="app.showAnalysis()">分析</button>
+            <div class="menu-separator"></div>
+            <button class="menu-btn" onclick="app.backToWelcome()">🏠</button>
+        </div>
+
+        <div class="main-content">
+            <div class="cut-panel">
+                <div class="cut-title">シーン選択</div>
+                <div class="cut-count-section">
+                    <div class="cut-count-label">シーン数設定</div>
+                                        <select id="sectionCount" class="cut-count-select" style="width: 80px; padding: 5px; border: 1px solid #c4a88b; border-radius: 5px; background: white;">
+                        <option value="1">1</option>
+                        <option value="2">2</option>
+                        <option value="3">3</option>
+                        <option value="4">4</option>
+                        <option value="5">5</option>
+                        <option value="6">6</option>
+                        <option value="7">7</option>
+                        <option value="8">8</option>
+                        <option value="9">9</option>
+                        <option value="10" selected>10</option>
+                        <option value="11">11</option>
+                        <option value="12">12</option>
+                        <option value="13">13</option>
+                        <option value="14">14</option>
+                        <option value="15">15</option>
+                        <option value="16">16</option>
+                        <option value="17">17</option>
+                        <option value="18">18</option>
+                        <option value="19">19</option>
+                        <option value="20">20</option>
+                        <option value="21">21</option>
+                        <option value="22">22</option>
+                        <option value="23">23</option>
+                        <option value="24">24</option>
+                        <option value="25">25</option>
+                        <option value="26">26</option>
+                        <option value="27">27</option>
+                        <option value="28">28</option>
+                        <option value="29">29</option>
+                        <option value="30">30</option>
+                        <option value="31">31</option>
+                        <option value="32">32</option>
+                        <option value="33">33</option>
+                        <option value="34">34</option>
+                        <option value="35">35</option>
+                        <option value="36">36</option>
+                        <option value="37">37</option>
+                        <option value="38">38</option>
+                        <option value="39">39</option>
+                        <option value="40">40</option>
+                        <option value="41">41</option>
+                        <option value="42">42</option>
+                        <option value="43">43</option>
+                        <option value="44">44</option>
+                        <option value="45">45</option>
+                        <option value="46">46</option>
+                        <option value="47">47</option>
+                        <option value="48">48</option>
+                        <option value="49">49</option>
+                        <option value="50">50</option>
+                        <option value="51">51</option>
+                        <option value="52">52</option>
+                        <option value="53">53</option>
+                        <option value="54">54</option>
+                        <option value="55">55</option>
+                        <option value="56">56</option>
+                        <option value="57">57</option>
+                        <option value="58">58</option>
+                        <option value="59">59</option>
+                        <option value="60">60</option>
+                        <option value="61">61</option>
+                        <option value="62">62</option>
+                        <option value="63">63</option>
+                        <option value="64">64</option>
+                        <option value="65">65</option>
+                        <option value="66">66</option>
+                        <option value="67">67</option>
+                        <option value="68">68</option>
+                        <option value="69">69</option>
+                        <option value="70">70</option>
+                        <option value="71">71</option>
+                        <option value="72">72</option>
+                        <option value="73">73</option>
+                        <option value="74">74</option>
+                        <option value="75">75</option>
+                        <option value="76">76</option>
+                        <option value="77">77</option>
+                        <option value="78">78</option>
+                        <option value="79">79</option>
+                        <option value="80">80</option>
+                        <option value="81">81</option>
+                        <option value="82">82</option>
+                        <option value="83">83</option>
+                        <option value="84">84</option>
+                        <option value="85">85</option>
+                        <option value="86">86</option>
+                        <option value="87">87</option>
+                        <option value="88">88</option>
+                        <option value="89">89</option>
+                        <option value="90">90</option>
+                        <option value="91">91</option>
+                        <option value="92">92</option>
+                        <option value="93">93</option>
+                        <option value="94">94</option>
+                        <option value="95">95</option>
+                        <option value="96">96</option>
+                        <option value="97">97</option>
+                        <option value="98">98</option>
+                        <option value="99">99</option>
+                        <option value="100">100</option>
+                        <option value="101">101</option>
+                        <option value="102">102</option>
+                        <option value="103">103</option>
+                        <option value="104">104</option>
+                        <option value="105">105</option>
+                        <option value="106">106</option>
+                        <option value="107">107</option>
+                        <option value="108">108</option>
+                        <option value="109">109</option>
+                        <option value="110">110</option>
+                        <option value="111">111</option>
+                        <option value="112">112</option>
+                        <option value="113">113</option>
+                        <option value="114">114</option>
+                        <option value="115">115</option>
+                        <option value="116">116</option>
+                        <option value="117">117</option>
+                        <option value="118">118</option>
+                        <option value="119">119</option>
+                        <option value="120">120</option>
+                        <option value="121">121</option>
+                        <option value="122">122</option>
+                        <option value="123">123</option>
+                        <option value="124">124</option>
+                        <option value="125">125</option>
+                        <option value="126">126</option>
+                        <option value="127">127</option>
+                        <option value="128">128</option>
+                        <option value="129">129</option>
+                        <option value="130">130</option>
+                        <option value="131">131</option>
+                        <option value="132">132</option>
+                        <option value="133">133</option>
+                        <option value="134">134</option>
+                        <option value="135">135</option>
+                        <option value="136">136</option>
+                        <option value="137">137</option>
+                        <option value="138">138</option>
+                        <option value="139">139</option>
+                        <option value="140">140</option>
+                        <option value="141">141</option>
+                        <option value="142">142</option>
+                        <option value="143">143</option>
+                        <option value="144">144</option>
+                        <option value="145">145</option>
+                        <option value="146">146</option>
+                        <option value="147">147</option>
+                        <option value="148">148</option>
+                        <option value="149">149</option>
+                        <option value="150">150</option>
+                        <option value="151">151</option>
+                        <option value="152">152</option>
+                        <option value="153">153</option>
+                        <option value="154">154</option>
+                        <option value="155">155</option>
+                        <option value="156">156</option>
+                        <option value="157">157</option>
+                        <option value="158">158</option>
+                        <option value="159">159</option>
+                        <option value="160">160</option>
+                        <option value="161">161</option>
+                        <option value="162">162</option>
+                        <option value="163">163</option>
+                        <option value="164">164</option>
+                        <option value="165">165</option>
+                        <option value="166">166</option>
+                        <option value="167">167</option>
+                        <option value="168">168</option>
+                        <option value="169">169</option>
+                        <option value="170">170</option>
+                        <option value="171">171</option>
+                        <option value="172">172</option>
+                        <option value="173">173</option>
+                        <option value="174">174</option>
+                        <option value="175">175</option>
+                        <option value="176">176</option>
+                        <option value="177">177</option>
+                        <option value="178">178</option>
+                        <option value="179">179</option>
+                        <option value="180">180</option>
+                        <option value="181">181</option>
+                        <option value="182">182</option>
+                        <option value="183">183</option>
+                        <option value="184">184</option>
+                        <option value="185">185</option>
+                        <option value="186">186</option>
+                        <option value="187">187</option>
+                        <option value="188">188</option>
+                        <option value="189">189</option>
+                        <option value="190">190</option>
+                        <option value="191">191</option>
+                        <option value="192">192</option>
+                        <option value="193">193</option>
+                        <option value="194">194</option>
+                        <option value="195">195</option>
+                        <option value="196">196</option>
+                        <option value="197">197</option>
+                        <option value="198">198</option>
+                        <option value="199">199</option>
+                        <option value="200">200</option>
+                        <option value="201">201</option>
+                        <option value="202">202</option>
+                        <option value="203">203</option>
+                        <option value="204">204</option>
+                        <option value="205">205</option>
+                        <option value="206">206</option>
+                        <option value="207">207</option>
+                        <option value="208">208</option>
+                        <option value="209">209</option>
+                        <option value="210">210</option>
+                        <option value="211">211</option>
+                        <option value="212">212</option>
+                        <option value="213">213</option>
+                        <option value="214">214</option>
+                        <option value="215">215</option>
+                        <option value="216">216</option>
+                        <option value="217">217</option>
+                        <option value="218">218</option>
+                        <option value="219">219</option>
+                        <option value="220">220</option>
+                        <option value="221">221</option>
+                        <option value="222">222</option>
+                        <option value="223">223</option>
+                        <option value="224">224</option>
+                        <option value="225">225</option>
+                        <option value="226">226</option>
+                        <option value="227">227</option>
+                        <option value="228">228</option>
+                        <option value="229">229</option>
+                        <option value="230">230</option>
+                        <option value="231">231</option>
+                        <option value="232">232</option>
+                        <option value="233">233</option>
+                        <option value="234">234</option>
+                        <option value="235">235</option>
+                        <option value="236">236</option>
+                        <option value="237">237</option>
+                        <option value="238">238</option>
+                        <option value="239">239</option>
+                        <option value="240">240</option>
+                        <option value="241">241</option>
+                        <option value="242">242</option>
+                        <option value="243">243</option>
+                        <option value="244">244</option>
+                        <option value="245">245</option>
+                        <option value="246">246</option>
+                        <option value="247">247</option>
+                        <option value="248">248</option>
+                        <option value="249">249</option>
+                        <option value="250">250</option>
+                        <option value="251">251</option>
+                        <option value="252">252</option>
+                        <option value="253">253</option>
+                        <option value="254">254</option>
+                        <option value="255">255</option>
+                        <option value="256">256</option>
+                        <option value="257">257</option>
+                        <option value="258">258</option>
+                        <option value="259">259</option>
+                        <option value="260">260</option>
+                        <option value="261">261</option>
+                        <option value="262">262</option>
+                        <option value="263">263</option>
+                        <option value="264">264</option>
+                        <option value="265">265</option>
+                        <option value="266">266</option>
+                        <option value="267">267</option>
+                        <option value="268">268</option>
+                        <option value="269">269</option>
+                        <option value="270">270</option>
+                        <option value="271">271</option>
+                        <option value="272">272</option>
+                        <option value="273">273</option>
+                        <option value="274">274</option>
+                        <option value="275">275</option>
+                        <option value="276">276</option>
+                        <option value="277">277</option>
+                        <option value="278">278</option>
+                        <option value="279">279</option>
+                        <option value="280">280</option>
+                        <option value="281">281</option>
+                        <option value="282">282</option>
+                        <option value="283">283</option>
+                        <option value="284">284</option>
+                        <option value="285">285</option>
+                        <option value="286">286</option>
+                        <option value="287">287</option>
+                        <option value="288">288</option>
+                        <option value="289">289</option>
+                        <option value="290">290</option>
+                        <option value="291">291</option>
+                        <option value="292">292</option>
+                        <option value="293">293</option>
+                        <option value="294">294</option>
+                        <option value="295">295</option>
+                        <option value="296">296</option>
+                        <option value="297">297</option>
+                        <option value="298">298</option>
+                        <option value="299">299</option>
+                        <option value="300">300</option>
+                    </select>
+                    <button class="cut-apply-btn" onclick="app.applySectionCount()">適用</button>
+                </div>
+                <button class="cut-button" onclick="app.setTargetMinutes()">目標分数設定</button>
+                <div class="cut-info">
+                    <div class="cut-info-label" id="currentCutLabel">Scene-01</div>
+                    <div class="cut-info-label" id="currentCutStats">0文字 (0分)</div>
+                    <div class="cut-info-label" id="targetDisplay" style="display: none; color: #8b6347; font-size: 11px; margin-top: 5px;">
+                        目標: <span id="targetMinutes">0</span>分 (<span id="targetChars">0</span>文字)
+                    </div>
+                </div>
+                <div class="cut-list" id="cutList"></div>
+            </div>
+
+            <div class="editor-panel">
+                <div class="editor-toolbar">
+                    <span>文字数: <span id="editorCharCount">0</span></span>
+                    <div class="char-button-panel" id="charButtonPanel"></div>
+                </div>
+                <textarea id="contentEditor" class="editor-textarea"></textarea>
+            </div>
+
+            <div class="button-panel">
+                <button class="side-button brown-btn" onclick="app.openCharacterManager()">キャラ管理</button>
+                <div class="checkbox-label">
+                    <input type="checkbox" id="useQuoteCheckbox">
+                    「」形式
+                </div>
+                <div class="checkbox-label">
+                    <input type="checkbox" id="useColonCheckbox" checked>
+                    ：形式
+                </div>
+                <div class="button-title">音声効果</div>
+                <button class="side-button green-btn" onclick="app.insertToGaki()">ト書き</button>
+                <button class="side-button green-btn" onclick="app.insertLocation()">現在地</button>
+                <button class="side-button brown-btn" onclick="app.openSoundEffect()">効果音</button>
+                <button class="side-button brown-btn" onclick="app.openBGM()">BGM</button>
+                <button class="side-button brown-btn" onclick="app.openAmbient()">環境音</button>
+                <button class="side-button pink-btn" onclick="app.openMoanGenerator()">💕 喘ぎ声</button>
+                <button class="side-button red-btn" onclick="app.openAdultSound()">🔞 アダルト効果音</button>
+                <button class="side-button beige-btn" onclick="app.openCreativeSlot()">🎰 創作スロット</button>
+                <div class="button-title">テキスト処理</div>
+                <button class="side-button brown-btn" onclick="app.openReplace()">文字置換</button>
+                <button class="side-button brown-btn" onclick="app.openDialogueNumbers()">台詞連番</button>
+            </div>
+
+            <div class="right-panel">
+                <div class="synopsis-box">
+                    <div class="synopsis-title">シーン別あらすじ</div>
+                    <textarea id="synopsisEditor" class="synopsis-textarea"></textarea>
+                </div>
+                <div class="synopsis-box">
+                    <div class="synopsis-title">メモ</div>
+                    <textarea id="memoEditor" class="synopsis-textarea"></textarea>
+                </div>
+            </div>
+        </div>
+
+        <div class="status-bar">
+            <span id="statusText">プロジェクト: 新規</span>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
