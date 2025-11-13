@@ -391,11 +391,17 @@
         
         /* フローティングアクションボタン */
         .fab-container {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            z-index: 1000;
-        }
+    position: fixed;
+    bottom: 80px;
+    right: 20px;
+    z-index: 1000;
+    transition: opacity 0.3s ease;
+}
+
+/* エディター編集中はFABを薄くする */
+.editor-textarea:focus ~ .fab-container {
+    opacity: 0.3;
+}
         .fab {
             width: 56px;
             height: 56px;
@@ -718,15 +724,19 @@
                 </div>
             </div>
             <div class="header-stats">
-                <div class="header-stat-item">
-                    <span>📝</span>
-                    <span id="headerTotalCharCount">0</span>文字
-                </div>
-                <div class="header-stat-item">
-                    <span>⏱️</span>
-                    <span id="headerEstimatedDuration">0</span>分
-                </div>
-            </div>
+    <div class="header-stat-item">
+        <span>📝</span>
+        <span id="headerTotalCharCount">0</span>文字
+    </div>
+    <div class="header-stat-item">
+        <span>⏱️</span>
+        <span id="headerEstimatedDuration">0</span>分
+    </div>
+    <div class="header-stat-item" id="saveStatus">
+        <span>💾</span>
+        <span>自動保存</span>
+    </div>
+</div>
         </div>
 
         <!-- タブナビゲーション -->
@@ -831,10 +841,7 @@
             </div>
         </div>
 
-        <!-- FAB -->
-        <div class="fab-container">
-            <button class="fab" onclick="app.saveProject()">💾</button>
-        </div>
+       
     </div>
 
     <!-- メニューモーダル -->
@@ -1439,18 +1446,27 @@ hideMenu() {
     },
     
     updateCharCount() {
-        const content = document.getElementById('contentEditor').value;
-        document.getElementById('editorCharCount').textContent = content.length;
-        
-        this.saveCutContent();
-        
-        const totalChars = this.cuts.reduce((sum, cut) => sum + (cut.content ? cut.content.length : 0), 0);
-        const headerTotalCharCount = document.getElementById('headerTotalCharCount');
-        const headerEstimatedDuration = document.getElementById('headerEstimatedDuration');
-        
-        if (headerTotalCharCount) headerTotalCharCount.textContent = totalChars.toLocaleString();
-        if (headerEstimatedDuration) headerEstimatedDuration.textContent = Math.floor(totalChars / 240);
-    },
+    const content = document.getElementById('contentEditor').value;
+    document.getElementById('editorCharCount').textContent = content.length;
+    
+    this.saveCutContent();
+    
+    // 自動保存タイマー設定
+    if (this.autoSaveTimer) {
+        clearTimeout(this.autoSaveTimer);
+    }
+    
+    this.autoSaveTimer = setTimeout(() => {
+        this.autoSave();
+    }, 2000); // 2秒後に自動保存
+    
+    const totalChars = this.cuts.reduce((sum, cut) => sum + (cut.content ? cut.content.length : 0), 0);
+    const headerTotalCharCount = document.getElementById('headerTotalCharCount');
+    const headerEstimatedDuration = document.getElementById('headerEstimatedDuration');
+    
+    if (headerTotalCharCount) headerTotalCharCount.textContent = totalChars.toLocaleString();
+    if (headerEstimatedDuration) headerEstimatedDuration.textContent = Math.floor(totalChars / 240);
+},
     
     openCharacterManager() {
         const name = prompt('キャラクター名を入力してください:');
@@ -1459,6 +1475,34 @@ hideMenu() {
             this.updateCharacterButtons();
         }
     },
+autoSave() {
+    if (!this.currentProject) return;
+    
+    this.saveCutContent();
+    
+    const project = {
+        cuts: this.cuts,
+        characters: this.characters,
+        title: this._projectTitle || '',
+        globalSynopsis: this._globalSynopsis || '',
+        lastModified: new Date().toISOString()
+    };
+    
+    localStorage.setItem(`project_${this.currentProject}`, JSON.stringify(project));
+    this.saveProjectList();
+    
+    // 保存ステータス表示
+    const saveStatus = document.getElementById('saveStatus');
+    if (saveStatus) {
+        saveStatus.innerHTML = '<span>💾</span><span>保存済み</span>';
+        setTimeout(() => {
+            if (saveStatus) {
+                saveStatus.innerHTML = '<span>💾</span><span>自動保存</span>';
+            }
+        }, 1000);
+    }
+},
+
     
     updateCharacterButtons() {
         const panel = document.getElementById('charButtonPanel');
@@ -2597,6 +2641,8 @@ if ('serviceWorker' in navigator) {
     </script>
 </body>
 </html>
+
+
 
 
 
