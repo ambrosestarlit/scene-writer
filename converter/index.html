@@ -1,0 +1,764 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scene*Writer データ変換ツール</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: "Hiragino Kaku Gothic ProN", "Yu Gothic", "Meiryo", sans-serif;
+            background: linear-gradient(135deg, #f5f0e8 0%, #e8dcc8 100%);
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            max-width: 900px;
+            width: 100%;
+            overflow: hidden;
+        }
+        .header {
+            background: linear-gradient(to right, #7c5b53, #a0795f);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        .header-title {
+            font-size: 28px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        .header-subtitle {
+            font-size: 14px;
+            color: #e7d0a9;
+        }
+        .content {
+            padding: 30px;
+        }
+        .section {
+            margin-bottom: 30px;
+        }
+        .section-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: #7c5b53;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #e7d0a9;
+        }
+        .textarea-container {
+            position: relative;
+        }
+        .textarea-label {
+            font-size: 14px;
+            font-weight: bold;
+            color: #7c5b53;
+            margin-bottom: 8px;
+            display: block;
+        }
+        .data-textarea {
+            width: 100%;
+            height: 200px;
+            padding: 15px;
+            border: 2px solid #c4a88b;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            resize: vertical;
+            background: #fafafa;
+            line-height: 1.5;
+        }
+        .data-textarea:focus {
+            outline: none;
+            border-color: #7c5b53;
+            background: white;
+        }
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        .btn {
+            flex: 1;
+            padding: 15px;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        .btn:active {
+            transform: translateY(0);
+        }
+        .btn-primary {
+            background: #7c5b53;
+            color: white;
+        }
+        .btn-primary:hover {
+            background: #6a4d45;
+        }
+        .btn-secondary {
+            background: #6b8b5a;
+            color: white;
+        }
+        .btn-secondary:hover {
+            background: #5a7a49;
+        }
+        .btn-danger {
+            background: #c85a8b;
+            color: white;
+        }
+        .btn-danger:hover {
+            background: #b74a7a;
+        }
+        .btn-convert {
+            background: #4a7c7e;
+            color: white;
+        }
+        .btn-convert:hover {
+            background: #3a6c6e;
+        }
+        .info-box {
+            background: #f0e6d2;
+            border: 2px solid #e7d0a9;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+        .info-title {
+            font-weight: bold;
+            color: #7c5b53;
+            margin-bottom: 8px;
+            font-size: 15px;
+        }
+        .info-item {
+            font-size: 13px;
+            margin-bottom: 5px;
+            padding-left: 15px;
+            position: relative;
+        }
+        .info-item::before {
+            content: "•";
+            position: absolute;
+            left: 0;
+            color: #7c5b53;
+            font-weight: bold;
+        }
+        .result-box {
+            background: #e6f7ff;
+            border: 2px solid #91d5ff;
+            border-radius: 10px;
+            padding: 15px;
+            margin-top: 20px;
+            display: none;
+        }
+        .result-box.success {
+            background: #f6ffed;
+            border-color: #b7eb8f;
+        }
+        .result-box.error {
+            background: #fff1f0;
+            border-color: #ffccc7;
+        }
+        .result-box.warning {
+            background: #fffbe6;
+            border-color: #ffe58f;
+        }
+        .result-title {
+            font-weight: bold;
+            margin-bottom: 8px;
+            font-size: 15px;
+        }
+        .result-box.success .result-title {
+            color: #52c41a;
+        }
+        .result-box.error .result-title {
+            color: #ff4d4f;
+        }
+        .result-box.warning .result-title {
+            color: #faad14;
+        }
+        .result-content {
+            font-size: 14px;
+            line-height: 1.6;
+        }
+        .filename-input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #c4a88b;
+            border-radius: 10px;
+            font-size: 14px;
+            margin-bottom: 15px;
+        }
+        .filename-input:focus {
+            outline: none;
+            border-color: #7c5b53;
+        }
+        .format-select {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        .format-option {
+            flex: 1;
+            padding: 12px;
+            border: 2px solid #c4a88b;
+            border-radius: 10px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: white;
+        }
+        .format-option:hover {
+            border-color: #7c5b53;
+            background: #f9f5f0;
+        }
+        .format-option.active {
+            border-color: #7c5b53;
+            background: #7c5b53;
+            color: white;
+            font-weight: bold;
+        }
+        .conversion-mode {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            background: #f9f5f0;
+            padding: 15px;
+            border-radius: 10px;
+        }
+        .mode-option {
+            flex: 1;
+            padding: 15px;
+            border: 2px solid #c4a88b;
+            border-radius: 10px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: white;
+        }
+        .mode-option:hover {
+            border-color: #7c5b53;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        .mode-option.active {
+            border-color: #4a7c7e;
+            background: #4a7c7e;
+            color: white;
+            font-weight: bold;
+        }
+        .footer {
+            background: #f9f5f0;
+            padding: 20px;
+            text-align: center;
+            color: #999;
+            font-size: 13px;
+        }
+        .preview-section {
+            display: none;
+        }
+        .preview-section.active {
+            display: block;
+        }
+        .preview-content {
+            background: #f5f5f5;
+            padding: 15px;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            white-space: pre-wrap;
+            word-break: break-word;
+            max-height: 400px;
+            overflow-y: auto;
+            line-height: 1.5;
+        }
+        .file-upload-area {
+            border: 3px dashed #c4a88b;
+            border-radius: 10px;
+            padding: 30px;
+            text-align: center;
+            background: #fafafa;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-bottom: 15px;
+        }
+        .file-upload-area:hover {
+            border-color: #7c5b53;
+            background: #f0e6d2;
+        }
+        .file-upload-area.dragover {
+            border-color: #4a7c7e;
+            background: #e0f0f0;
+        }
+        .file-input {
+            display: none;
+        }
+        @media (max-width: 600px) {
+            .button-group {
+                flex-direction: column;
+            }
+            .format-select {
+                flex-direction: column;
+            }
+            .mode-option {
+                font-size: 14px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="header-title">🎭 Scene*Writer データ変換ツール</div>
+            <div class="header-subtitle">vwpファイルとtxtファイルの拡張子を相互変換（JSONデータ保持）</div>
+        </div>
+
+        <div class="content">
+            <div class="conversion-mode">
+                <div class="mode-option active" onclick="setConversionMode('vwp-to-txt', false)" id="mode-vwp-to-txt">
+                    <div style="font-size: 24px; margin-bottom: 5px;">📄 → 📝</div>
+                    <div style="font-weight: bold;">VWP → TXT</div>
+                    <div style="font-size: 11px; color: #666; margin-top: 5px;">オフライン版データをブラウザ用に変換</div>
+                </div>
+                <div class="mode-option" onclick="setConversionMode('txt-to-vwp', false)" id="mode-txt-to-vwp">
+                    <div style="font-size: 24px; margin-bottom: 5px;">📝 → 📄</div>
+                    <div style="font-weight: bold;">TXT → VWP</div>
+                    <div style="font-size: 11px; color: #666; margin-top: 5px;">テキストデータをオフライン版用に変換</div>
+                </div>
+            </div>
+
+            <div class="info-box">
+                <div class="info-title" id="info-title">📌 VWP → TXT 変換について</div>
+                <div id="info-content">
+                    <div class="info-item">オフライン版Scene*Writerで作成したvwpファイルを読み込みます</div>
+                    <div class="info-item">JSONデータをtxt拡張子で保存します</div>
+                    <div class="info-item">スマホやブラウザ版Scene*Writerで読み込み可能になります</div>
+                    <div class="info-item">データ構造はそのまま保持されます</div>
+                </div>
+            </div>
+
+            <div class="section">
+                <div class="section-title" id="input-section-title">📥 入力データ（VWPファイル）</div>
+                
+                <div class="file-upload-area" id="fileUploadArea" onclick="document.getElementById('fileInput').click();">
+                    <div style="font-size: 40px; margin-bottom: 10px;">📁</div>
+                    <div style="font-weight: bold; margin-bottom: 5px;">ファイルを選択またはドラッグ&ドロップ</div>
+                    <div style="font-size: 12px; color: #666;">vwpファイルまたはtxtファイル</div>
+                </div>
+                <input type="file" id="fileInput" class="file-input" accept=".vwp,.txt,.json">
+                
+                <label class="textarea-label">またはデータを直接貼り付け：</label>
+                <textarea 
+                    id="dataInput" 
+                    class="data-textarea" 
+                    placeholder="ここにデータを貼り付けてください..."></textarea>
+            </div>
+
+            <div class="section">
+                <label class="textarea-label">📝 ファイル名</label>
+                <input 
+                    type="text" 
+                    id="filenameInput" 
+                    class="filename-input" 
+                    placeholder="プロジェクト名を入力（拡張子は自動付与）"
+                    value="マイプロジェクト">
+            </div>
+
+            <div class="button-group">
+                <button class="btn btn-convert" onclick="convertData()">🔄 変換実行</button>
+                <button class="btn btn-secondary" onclick="previewData()">👁️ プレビュー</button>
+                <button class="btn btn-primary" onclick="downloadData()">💾 ダウンロード</button>
+                <button class="btn btn-danger" onclick="clearAll()">🗑️ クリア</button>
+            </div>
+
+            <div id="resultBox" class="result-box"></div>
+
+            <div id="previewSection" class="preview-section">
+                <div class="section">
+                    <div class="section-title">📄 変換結果プレビュー</div>
+                    <div id="previewContent" class="preview-content"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p><strong>Scene*Writer データ変換ツール</strong></p>
+            <p style="margin-top: 10px;">© 2025 Ambrose Starlit</p>
+            <p style="margin-top: 10px; font-size: 11px;">このツールはオフラインで動作します。データは外部に送信されません。</p>
+        </div>
+    </div>
+
+    <script>
+        let conversionMode = 'vwp-to-txt';
+        let convertedData = null;
+
+        function setConversionMode(mode, preserveData = false) {
+            conversionMode = mode;
+            document.getElementById('mode-vwp-to-txt').classList.remove('active');
+            document.getElementById('mode-txt-to-vwp').classList.remove('active');
+            document.getElementById('mode-' + mode).classList.add('active');
+            
+            // 情報ボックスの更新
+            const infoTitle = document.getElementById('info-title');
+            const infoContent = document.getElementById('info-content');
+            const inputTitle = document.getElementById('input-section-title');
+            
+            if (mode === 'vwp-to-txt') {
+                infoTitle.textContent = '📌 VWP → TXT 変換について';
+                inputTitle.textContent = '📥 入力データ（VWPファイル）';
+                infoContent.innerHTML = `
+                    <div class="info-item">オフライン版Scene*Writerで作成したvwpファイルを読み込みます</div>
+                    <div class="info-item">JSONデータをtxt拡張子で保存します</div>
+                    <div class="info-item">スマホやブラウザ版Scene*Writerで読み込み可能になります</div>
+                    <div class="info-item">データ構造はそのまま保持されます</div>
+                `;
+            } else {
+                infoTitle.textContent = '📌 TXT → VWP 変換について';
+                inputTitle.textContent = '📥 入力データ（TXTファイル）';
+                infoContent.innerHTML = `
+                    <div class="info-item">ブラウザ/スマホ版のtxtファイル（JSON形式）を読み込みます</div>
+                    <div class="info-item">Scene*Writer形式（.vwp拡張子）に変換します</div>
+                    <div class="info-item">オフライン版Scene*Writerで読み込み可能になります</div>
+                    <div class="info-item">データの整合性を確認して変換します</div>
+                `;
+            }
+            
+            // ファイル読み込み時はデータを保持、手動切り替え時のみクリア
+            if (!preserveData) {
+                clearAll(true);
+            } else {
+                // プレビューと結果だけクリア
+                document.getElementById('previewSection').classList.remove('active');
+                convertedData = null;
+                hideResult();
+            }
+        }
+
+        function validateJSON(text) {
+            try {
+                const data = JSON.parse(text);
+                if (!data.cuts || !Array.isArray(data.cuts)) {
+                    return { valid: false, error: 'プロジェクトデータの形式が正しくありません（cutsプロパティが必要です）' };
+                }
+                return { valid: true, data: data };
+            } catch (e) {
+                return { valid: false, error: 'JSON形式が正しくありません: ' + e.message };
+            }
+        }
+
+        function generateTxtFromVWP(data) {
+            // JSONデータをそのままテキストとして返す（スマホ/ブラウザ版で読み込み可能）
+            return JSON.stringify(data, null, 2);
+        }
+
+        function parseTextToVWP(text) {
+            // まずJSONとしてパースを試みる
+            try {
+                const data = JSON.parse(text);
+                // 有効なvwpデータ構造かチェック
+                if (data.cuts && Array.isArray(data.cuts)) {
+                    return data;
+                }
+            } catch (e) {
+                // JSONでない場合はエラー
+                console.log('JSONパースエラー、プレーンテキストとして処理');
+            }
+
+            // JSONでない場合は、シンプルなテキストから基本構造を作成
+            const lines = text.split('\n');
+            const data = {
+                title: 'インポートプロジェクト',
+                globalSynopsis: '',
+                characters: [],
+                cuts: [{
+                    name: 'メインシナリオ',
+                    synopsis: '',
+                    content: text.trim()
+                }]
+            };
+
+            return data;
+        }
+
+        function convertData() {
+            const textarea = document.getElementById('dataInput');
+            const input = textarea.value.trim();
+            
+            console.log('変換開始 - 入力データ長:', input.length);
+            console.log('入力データの最初の100文字:', input.substring(0, 100));
+            
+            if (!input || input.length === 0) {
+                showResult('error', '❌ エラー', 'データを入力または貼り付けてください');
+                return;
+            }
+
+            try {
+                if (conversionMode === 'vwp-to-txt') {
+                    // VWP → TXT変換
+                    const validation = validateJSON(input);
+                    if (!validation.valid) {
+                        showResult('error', '❌ エラー', validation.error);
+                        return;
+                    }
+                    convertedData = generateTxtFromVWP(validation.data);
+                    showResult('success', '✅ 変換成功', 'VWPファイルをTXT形式（JSON）で保存可能にしました');
+                } else {
+                    // TXT → VWP変換
+                    convertedData = JSON.stringify(parseTextToVWP(input), null, 2);
+                    showResult('success', '✅ 変換成功', 'TXTファイル（JSON）をVWP形式に変換しました');
+                }
+                
+                // プレビューを表示
+                document.getElementById('previewContent').textContent = convertedData.substring(0, 2000) + 
+                    (convertedData.length > 2000 ? '\n\n... (省略) ...' : '');
+                document.getElementById('previewSection').classList.add('active');
+                
+            } catch (e) {
+                console.error('変換エラー:', e);
+                showResult('error', '❌ エラー', '変換中にエラーが発生しました: ' + e.message);
+            }
+        }
+
+        function previewData() {
+            const input = document.getElementById('dataInput').value.trim();
+
+            if (!input) {
+                showResult('error', '❌ エラー', 'プレビューするデータがありません');
+                document.getElementById('previewSection').classList.remove('active');
+                return;
+            }
+
+            // 自動変換してプレビュー
+            convertData();
+        }
+
+        function downloadData() {
+            if (!convertedData) {
+                // 変換されていない場合は先に変換を実行
+                convertData();
+                if (!convertedData) return;
+            }
+
+            const filename = document.getElementById('filenameInput').value.trim() || 'プロジェクト';
+            let extension, mimeType;
+
+            if (conversionMode === 'vwp-to-txt') {
+                extension = '.txt';
+                mimeType = 'text/plain';
+            } else {
+                extension = '.vwp';
+                mimeType = 'application/json';
+            }
+
+            // ダウンロード実行
+            const blob = new Blob([convertedData], { type: mimeType + ';charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename + extension;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+
+            showResult('success', '✅ ダウンロード完了', `「${filename}${extension}」を保存しました`);
+        }
+
+        function clearAll(skipConfirm) {
+            if (!skipConfirm && !window.confirm('入力内容をすべてクリアしますか？')) {
+                return;
+            }
+            document.getElementById('dataInput').value = '';
+            document.getElementById('filenameInput').value = 'マイプロジェクト';
+            document.getElementById('previewSection').classList.remove('active');
+            convertedData = null;
+            hideResult();
+        }
+
+        function showResult(type, title, message) {
+            const resultBox = document.getElementById('resultBox');
+            resultBox.className = 'result-box ' + type;
+            resultBox.innerHTML = `
+                <div class="result-title">${title}</div>
+                <div class="result-content">${message}</div>
+            `;
+            resultBox.style.display = 'block';
+        }
+
+        function hideResult() {
+            document.getElementById('resultBox').style.display = 'none';
+        }
+
+        // ファイル入力処理
+        document.getElementById('fileInput').addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    const content = event.target.result;
+                    
+                    // まずデータをテキストエリアに設定
+                    const textarea = document.getElementById('dataInput');
+                    textarea.value = content;
+                    
+                    // ファイル拡張子に基づいてモードを自動設定（データは保持）
+                    if (file.name.endsWith('.vwp') || file.name.endsWith('.json')) {
+                        // vwpまたはjsonファイルの場合：VWP→TXT変換モード
+                        setConversionMode('vwp-to-txt', true);
+                    } else if (file.name.endsWith('.txt')) {
+                        // txtファイルの場合：常にTXT→VWP変換モード
+                        setConversionMode('txt-to-vwp', true);
+                    }
+                    
+                    // デバッグ用：読み込まれたデータの確認
+                    console.log('ファイル読み込み完了:', file.name);
+                    console.log('データサイズ:', content.length, '文字');
+                    console.log('選択されたモード:', conversionMode);
+                    
+                    showResult('success', '✅ ファイル読み込み完了', `「${file.name}」を読み込みました（${content.length}文字）`);
+                    
+                    // ファイル入力をリセット（同じファイルを再度選択できるように）
+                    e.target.value = '';
+                };
+                reader.onerror = (error) => {
+                    console.error('ファイル読み込みエラー:', error);
+                    showResult('error', '❌ エラー', 'ファイルの読み込みに失敗しました');
+                };
+                reader.readAsText(file, 'utf-8');
+            }
+        });
+
+        // ドラッグ&ドロップ対応
+        const fileUploadArea = document.getElementById('fileUploadArea');
+        const textarea = document.getElementById('dataInput');
+        
+        // ファイルアップロードエリアのドラッグ&ドロップ
+        fileUploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            fileUploadArea.classList.add('dragover');
+        });
+
+        fileUploadArea.addEventListener('dragleave', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            fileUploadArea.classList.remove('dragover');
+        });
+
+        fileUploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            fileUploadArea.classList.remove('dragover');
+            
+            const file = e.dataTransfer.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    const content = event.target.result;
+                    
+                    // まずデータをテキストエリアに設定
+                    const textarea = document.getElementById('dataInput');
+                    textarea.value = content;
+                    
+                    // ファイル拡張子に基づいてモードを自動設定（データは保持）
+                    if (file.name.endsWith('.vwp') || file.name.endsWith('.json')) {
+                        // vwpまたはjsonファイルの場合：VWP→TXT変換モード
+                        setConversionMode('vwp-to-txt', true);
+                    } else if (file.name.endsWith('.txt')) {
+                        // txtファイルの場合：常にTXT→VWP変換モード
+                        setConversionMode('txt-to-vwp', true);
+                    }
+                    
+                    console.log('ドロップファイル読み込み完了:', file.name);
+                    console.log('データサイズ:', content.length, '文字');
+                    console.log('選択されたモード:', conversionMode);
+                    showResult('success', '✅ ファイル読み込み完了', `「${file.name}」をドロップで読み込みました（${content.length}文字）`);
+                };
+                reader.onerror = (error) => {
+                    console.error('ファイル読み込みエラー:', error);
+                    showResult('error', '❌ エラー', 'ファイルの読み込みに失敗しました');
+                };
+                reader.readAsText(file, 'utf-8');
+            }
+        });
+        
+        // テキストエリアのドラッグ&ドロップ
+        textarea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            textarea.style.borderColor = '#7c5b53';
+            textarea.style.background = '#f0e6d2';
+        });
+
+        textarea.addEventListener('dragleave', () => {
+            textarea.style.borderColor = '#c4a88b';
+            textarea.style.background = '#fafafa';
+        });
+
+        textarea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            textarea.style.borderColor = '#c4a88b';
+            textarea.style.background = '#fafafa';
+
+            const file = e.dataTransfer.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    const content = event.target.result;
+                    
+                    // データをテキストエリアに設定
+                    textarea.value = content;
+                    
+                    // ファイル拡張子に基づいてモードを自動設定（データは保持）
+                    if (file.name.endsWith('.vwp') || file.name.endsWith('.json')) {
+                        // vwpまたはjsonファイルの場合：VWP→TXT変換モード
+                        setConversionMode('vwp-to-txt', true);
+                    } else if (file.name.endsWith('.txt')) {
+                        // txtファイルの場合：常にTXT→VWP変換モード
+                        setConversionMode('txt-to-vwp', true);
+                    }
+                    
+                    console.log('テキストエリアへの読み込み完了:', file.name);
+                    console.log('データサイズ:', content.length, '文字');
+                    console.log('選択されたモード:', conversionMode);
+                    showResult('success', '✅ ファイル読み込み完了', `「${file.name}」を読み込みました（${content.length}文字）`);
+                };
+                reader.onerror = (error) => {
+                    console.error('ファイル読み込みエラー:', error);
+                    showResult('error', '❌ エラー', 'ファイルの読み込みに失敗しました');
+                };
+                reader.readAsText(file, 'utf-8');
+            }
+        });
+
+        // キーボードショートカット
+        document.addEventListener('keydown', (e) => {
+            // Ctrl/Cmd + Enter で変換実行
+            if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+                e.preventDefault();
+                convertData();
+            }
+            // Ctrl/Cmd + S でダウンロード
+            if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+                e.preventDefault();
+                downloadData();
+            }
+        });
+    </script>
+</body>
+</html>
