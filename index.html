@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scene*Writer - シーン構成型シナリオエディター</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: "Hiragino Kaku Gothic ProN", "Yu Gothic", "MS Gothic", sans-serif;
+            background: linear-gradient(135deg, #f5f0e8 0%, #e8dfd0 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 50px;
+            padding: 40px 20px;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(124, 91, 83, 0.1);
+        }
+        
+        .logo {
+            font-size: 48px;
+            margin-bottom: 15px;
+        }
+        
+        .title {
+            font-size: 42px;
+            font-weight: bold;
+            color: #7c5b53;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .subtitle {
+            font-size: 18px;
+            color: #a0795f;
+            margin-bottom: 20px;
+        }
+        
+        .description {
+            color: #666;
+            line-height: 1.8;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        
+        .tools-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+            margin-bottom: 40px;
+        }
+        
+        .tool-card {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 5px 20px rgba(124, 91, 83, 0.15);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .tool-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 5px;
+            background: linear-gradient(90deg, #7c5b53 0%, #a0795f 100%);
+        }
+        
+        .tool-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(124, 91, 83, 0.2);
+        }
+        
+        .tool-icon {
+            font-size: 48px;
+            margin-bottom: 15px;
+            display: block;
+        }
+        
+        .tool-name {
+            font-size: 24px;
+            font-weight: bold;
+            color: #7c5b53;
+            margin-bottom: 10px;
+        }
+        
+        .tool-description {
+            color: #666;
+            line-height: 1.6;
+            margin-bottom: 20px;
+            min-height: 60px;
+        }
+        
+        .tool-features {
+            margin-bottom: 20px;
+        }
+        
+        .feature {
+            display: flex;
+            align-items: center;
+            margin: 8px 0;
+            color: #555;
+            font-size: 14px;
+        }
+        
+        .feature::before {
+            content: '✓';
+            color: #7c5b53;
+            font-weight: bold;
+            margin-right: 8px;
+        }
+        
+        .launch-button {
+            display: inline-block;
+            width: 100%;
+            text-align: center;
+            background: linear-gradient(135deg, #7c5b53 0%, #a0795f 100%);
+            color: white;
+            padding: 12px 24px;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            box-shadow: 0 3px 10px rgba(124, 91, 83, 0.3);
+        }
+        
+        .launch-button:hover {
+            background: linear-gradient(135deg, #6a4a42 0%, #8d6954 100%);
+            box-shadow: 0 5px 15px rgba(124, 91, 83, 0.4);
+            transform: translateY(-2px);
+        }
+        
+        .badge {
+            display: inline-block;
+            background: #e7d0a9;
+            color: #7c5b53;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+            margin-left: 10px;
+        }
+        
+        .info-section {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 5px 20px rgba(124, 91, 83, 0.1);
+        }
+        
+        .info-title {
+            font-size: 24px;
+            font-weight: bold;
+            color: #7c5b53;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+        }
+        
+        .info-title::before {
+            content: '📌';
+            margin-right: 10px;
+        }
+        
+        .info-content {
+            color: #666;
+            line-height: 1.8;
+        }
+        
+        .info-content ul {
+            margin-left: 20px;
+            margin-top: 10px;
+        }
+        
+        .info-content li {
+            margin: 8px 0;
+        }
+        
+        .footer {
+            text-align: center;
+            padding: 30px;
+            color: #999;
+            background: white;
+            border-radius: 15px;
+            margin-top: 40px;
+        }
+        
+        .footer-title {
+            font-size: 18px;
+            color: #7c5b53;
+            margin-bottom: 10px;
+        }
+        
+        .social-links {
+            margin-top: 15px;
+        }
+        
+        .social-links a {
+            color: #a0795f;
+            text-decoration: none;
+            margin: 0 10px;
+            font-size: 14px;
+        }
+        
+        .social-links a:hover {
+            color: #7c5b53;
+        }
+        
+        @media (max-width: 768px) {
+            .title {
+                font-size: 32px;
+            }
+            
+            .tools-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="logo">🎬</div>
+            <h1 class="title">Scene*Writer</h1>
+            <p class="subtitle">シーン構成型シナリオエディター</p>
+            <p class="description">
+                ボイスドラマや音声作品の台本を効率的に執筆できるWebアプリケーションです。<br>
+                最大300シーンの管理、キャラクター管理、自動文字数カウント機能など、<br>
+                音声作品制作に必要な機能を全て搭載しています。
+            </p>
+        </div>
+        
+        <div class="tools-grid">
+            <div class="tool-card">
+                <span class="tool-icon">💻</span>
+                <h2 class="tool-name">Scene*Writer<span class="badge">PC版</span></h2>
+                <p class="tool-description">
+                    デスクトップ・ノートパソコン向けのフル機能版。
+                    大画面で快適に執筆作業ができます。
+                </p>
+                <div class="tool-features">
+                    <div class="feature">300シーンまで管理可能</div>
+                    <div class="feature">キャラクター管理機能</div>
+                    <div class="feature">自動保存・エクスポート</div>
+                    <div class="feature">効果音・BGM挿入機能</div>
+                </div>
+                <a href="./pc/" class="launch-button">PC版を起動</a>
+            </div>
+            
+            <div class="tool-card">
+                <span class="tool-icon">📱</span>
+                <h2 class="tool-name">Scene*Writer<span class="badge">スマホ版</span></h2>
+                <p class="tool-description">
+                    スマートフォン・タブレット向けに最適化。
+                    外出先でもアイデアをすぐに形にできます。
+                </p>
+                <div class="tool-features">
+                    <div class="feature">タッチ操作に最適化</div>
+                    <div class="feature">シンプルなインターフェース</div>
+                    <div class="feature">PC版とデータ互換</div>
+                    <div class="feature">オフライン動作対応</div>
+                </div>
+                <a href="./mobile/" class="launch-button">スマホ版を起動</a>
+            </div>
+            
+            <div class="tool-card">
+                <span class="tool-icon">🔄</span>
+                <h2 class="tool-name">データ変換ツール</h2>
+                <p class="tool-description">
+                    Voice×Writerとの相互変換や、旧バージョンのデータ移行をサポートします。
+                </p>
+                <div class="tool-features">
+                    <div class="feature">Voice×Writer形式に変換</div>
+                    <div class="feature">旧バージョンデータ対応</div>
+                    <div class="feature">一括変換機能</div>
+                    <div class="feature">データ検証機能</div>
+                </div>
+                <a href="./converter/" class="launch-button">変換ツールを起動</a>
+            </div>
+        </div>
+        
+        <div class="info-section">
+            <h2 class="info-title">使い方</h2>
+            <div class="info-content">
+                <ol>
+                    <li><strong>デバイスに合わせて選択</strong> - PCで作業する場合は「PC版」、スマートフォンなら「スマホ版」を選択してください。</li>
+                    <li><strong>プロジェクトを作成</strong> - 「新規」ボタンから新しいプロジェクトを開始します。</li>
+                    <li><strong>キャラクター登録</strong> - 「キャラ管理」から登場人物を追加すると、ワンクリックで名前を挿入できます。</li>
+                    <li><strong>シーンごとに執筆</strong> - 左側のシーンリストから選択して、場面ごとに執筆を進めます。</li>
+                    <li><strong>データの保存</strong> - 自動保存されますが、定期的に「上書き保存」でバックアップを作成しましょう。</li>
+                </ol>
+            </div>
+        </div>
+        
+        <div class="info-section">
+            <h2 class="info-title">動作環境</h2>
+            <div class="info-content">
+                <ul>
+                    <li><strong>対応ブラウザ：</strong> Chrome, Firefox, Edge, Safari（最新版推奨）</li>
+                    <li><strong>必要な機能：</strong> JavaScript, localStorage（Cookie）</li>
+                    <li><strong>推奨環境：</strong> PC版は1280×720以上の画面、スマホ版は5インチ以上の画面</li>
+                    <li><strong>インターネット接続：</strong> 初回読み込み時のみ必要（オフラインでも動作可能）</li>
+                </ul>
+            </div>
+        </div>
+        
+        <div class="info-section">
+            <h2 class="info-title">データの互換性</h2>
+            <div class="info-content">
+                <p>
+                    PC版とスマホ版は同じデータ形式（.vwp）を使用しているため、相互にデータのやり取りが可能です。<br>
+                    また、Voice×Writerで作成したプロジェクトも、データ変換ツールを使用することで読み込むことができます。
+                </p>
+                <ul>
+                    <li>プロジェクトファイル形式：.vwp（JSON形式）</li>
+                    <li>エクスポート形式：.txt（プレーンテキスト）</li>
+                    <li>旧バージョン（Cut-表記）のデータも自動変換</li>
+                </ul>
+            </div>
+        </div>
+        
+        <div class="footer">
+            <div class="footer-title">🧸 Ambrose Starlit</div>
+            <p>© 2025 Ambrose Starlit - VTuber & Developer</p>
+            <div class="social-links">
+                <a href="#">Twitter</a>
+                <a href="#">YouTube</a>
+                <a href="#">GitHub</a>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
