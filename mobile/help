@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <title>Scene*Writer Mobile 使い方ガイド</title>
+    <style>
+        * { 
+            margin: 0; 
+            padding: 0; 
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+        body { 
+            font-family: "Hiragino Kaku Gothic ProN", "Yu Gothic", "Meiryo", sans-serif;
+            background: #f5f0e8;
+            line-height: 1.8;
+            -webkit-overflow-scrolling: touch;
+        }
+        .container {
+            background: white;
+            min-height: 100vh;
+        }
+        .header {
+            background: linear-gradient(to right, #7c5b53, #a0795f);
+            color: white;
+            padding: 30px 20px;
+            text-align: center;
+        }
+        .title {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+        .subtitle {
+            font-size: 13px;
+            color: #e7d0a9;
+        }
+        .content {
+            padding: 20px;
+        }
+        .section {
+            margin-bottom: 30px;
+        }
+        .section-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: #7c5b53;
+            margin-bottom: 12px;
+            padding: 10px 12px;
+            background: #f9f5f0;
+            border-left: 4px solid #7c5b53;
+            border-radius: 5px;
+        }
+        .item {
+            margin-bottom: 10px;
+            padding-left: 18px;
+            position: relative;
+            font-size: 14px;
+        }
+        .item::before {
+            content: "•";
+            position: absolute;
+            left: 5px;
+            color: #7c5b53;
+            font-weight: bold;
+        }
+        .item strong {
+            color: #7c5b53;
+        }
+        .badge {
+            display: inline-block;
+            background: #e7d0a9;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            margin-left: 5px;
+            color: #7c5b53;
+        }
+        .note {
+            background: #fff9f0;
+            border: 2px solid #e7d0a9;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 15px 0;
+            font-size: 14px;
+        }
+        .note-title {
+            font-weight: bold;
+            color: #7c5b53;
+            margin-bottom: 8px;
+            font-size: 15px;
+        }
+        .warning {
+            background: #ffe6e6;
+            border-color: #ff9999;
+        }
+        .tip {
+            background: #e6f7ff;
+            border-color: #91d5ff;
+        }
+        .success {
+            background: #f0fff4;
+            border-color: #52c41a;
+        }
+        .footer {
+            text-align: center;
+            padding: 30px 20px;
+            background: #f9f5f0;
+            color: #999;
+            font-size: 13px;
+        }
+        .step {
+            background: white;
+            padding: 12px;
+            margin: 8px 0;
+            border-radius: 8px;
+            border: 1px solid #e0e0e0;
+            font-size: 14px;
+        }
+        .step-number {
+            display: inline-block;
+            background: #7c5b53;
+            color: white;
+            width: 24px;
+            height: 24px;
+            line-height: 24px;
+            text-align: center;
+            border-radius: 50%;
+            font-size: 12px;
+            font-weight: bold;
+            margin-right: 8px;
+        }
+        .icon {
+            font-size: 20px;
+            margin-right: 5px;
+        }
+        .new-badge {
+            display: inline-block;
+            background: #ff6b6b;
+            color: white;
+            padding: 2px 6px;
+            border-radius: 10px;
+            font-size: 10px;
+            margin-left: 5px;
+            font-weight: bold;
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.7; }
+            100% { opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="title">📱 Scene*Writer Mobile</div>
+            <div class="subtitle">使い方ガイド v1.1</div>
+        </div>
+
+        <div class="content">
+            <div class="section">
+                <div class="section-title"><span class="icon">🚀</span>はじめに</div>
+                <div class="item"><strong>Scene*Writer Mobile</strong>は、スマホでシナリオを執筆できる本格アプリです</div>
+                <div class="item">タブを切り替えて、編集・シーン管理・プロジェクト情報を操作します</div>
+                <div class="item">データは<strong>2秒ごとに自動保存</strong>されます<span class="new-badge">NEW</span></div>
+            </div>
+
+            <div class="note success">
+                <div class="note-title">✨ 自動保存機能について<span class="new-badge">NEW</span></div>
+                <div class="item">文字を入力すると<strong>2秒後に自動保存</strong>されます</div>
+                <div class="item">ヘッダーの「💾 自動保存」が「💾 保存済み」に変わります</div>
+                <div class="item">手動保存も可能：メニュー → 上書き保存</div>
+                <div class="item" style="color: #52c41a; font-weight: bold;">🧸 安心して執筆に集中できます！</div>
+            </div>
+
+            <div class="section">
+                <div class="section-title"><span class="icon">📝</span>基本操作</div>
+                <div class="item"><strong>新規作成:</strong> ウェルカム画面から「新規プロジェクト」をタップ</div>
+                <div class="item"><strong>自動保存:</strong> 入力後2秒で自動保存<span class="new-badge">NEW</span></div>
+                <div class="item"><strong>手動保存:</strong> メニュー → 上書き保存</div>
+                <div class="item"><strong>メニュー:</strong> 画面右上の☰ボタンからメニューを開く</div>
+                <div class="item"><strong>ホームに戻る:</strong> メニューから🏠ホームを選択</div>
+            </div>
+
+            <div class="section">
+                <div class="section-title"><span class="icon">📋</span>3つのタブの使い方</div>
+                
+                <div class="step">
+                    <span class="step-number">1</span>
+                    <strong>✏️ 編集タブ</strong><br>
+                    シナリオ本文を執筆するメインの画面です<br>
+                    <span style="color: #52c41a;">• 2秒ごとに自動保存されます</span>
+                </div>
+                
+                <div class="step">
+                    <span class="step-number">2</span>
+                    <strong>📋 シーンタブ</strong><br>
+                    シーン数の変更、シーン切り替え、あらすじ入力<br>
+                    <span style="color: #666;">• 最大300シーンまで設定可能</span>
+                </div>
+                
+                <div class="step">
+                    <span class="step-number">3</span>
+                    <strong>📝 プロジェクトタブ</strong><br>
+                    タイトル、あらすじ、キャラ設定、メモを管理<br>
+                    <span style="color: #666;">• プロジェクト全体の情報をここで管理</span>
+                </div>
+            </div>
+
+            <div class="section">
+                <div class="section-title"><span class="icon">💾</span>保存ステータスの確認<span class="new-badge">NEW</span></div>
+                <div class="item">画面上部ヘッダーで保存状態を確認できます</div>
+                <div class="item"><strong>「💾 自動保存」</strong>：入力待機中</div>
+                <div class="item"><strong>「💾 保存済み」</strong>：保存完了（1秒間表示）</div>
+                <div class="item"><strong>「💾 2秒おきに自動保存されます🧸」</strong>：通常状態</div>
+            </div>
+
+            <div class="section">
+                <div class="section-title"><span class="icon">🎭</span>キャラクター管理</div>
+                <div class="item"><strong>登録方法:</strong> プロジェクトタブ→キャラクター管理ボタン</div>
+                <div class="item"><strong>挿入方法:</strong> 編集タブでキャラ名ボタンをタップ</div>
+                <div class="item"><strong>形式切替:</strong> 「：形式」と「「」形式」を選択可能</div>
+                <div class="item"><strong>特殊文字:</strong> …、っ、♡などもボタンで簡単挿入</div>
+            </div>
+
+            <div class="section">
+                <div class="section-title"><span class="icon">🎬</span>シーン管理</div>
+                <div class="item"><strong>シーン数:</strong> 1〜300シーンまで設定可能</div>
+                <div class="item"><strong>切り替え:</strong> シーンタブのリストからタップして切り替え</div>
+                <div class="item"><strong>文字数:</strong> 各シーンの文字数と推定時間を自動計算</div>
+                <div class="item"><strong>あらすじ:</strong> シーンタブで各シーンのあらすじを記入</div>
+                <div class="item"><strong>自動保存:</strong> シーン切り替え時も自動保存<span class="new-badge">NEW</span></div>
+            </div>
+
+            <div class="note">
+                <div class="note-title">📏 時間の計算方法</div>
+                <div class="item">240文字 = 1分として自動計算されます</div>
+                <div class="item">例: 720文字 → 約3分</div>
+                <div class="item">例: 1200文字 → 約5分</div>
+                <div class="item">ヘッダーに合計文字数と推定時間が常時表示されます</div>
+            </div>
+
+            <div class="section">
+                <div class="section-title"><span class="icon">🛠️</span>便利な機能ボタン</div>
+                <div class="item"><strong>ト書き:</strong> シーンの状況説明を挿入 <span class="badge">// </span></div>
+                <div class="item"><strong>現在地:</strong> 場所情報を挿入 <span class="badge">〇 </span></div>
+                <div class="item"><strong>効果音/BGM/環境音:</strong> 音声演出の指定を挿入</div>
+                <div class="item"><strong>💕 喘ぎ声:</strong> R18コンテンツ用の音声を自動生成</div>
+                <div class="item"><strong>🔞 アダルト効果音:</strong> 各種効果音をワンタップで挿入</div>
+                <div class="item"><strong>🎰 スロット:</strong> ランダムな創作アイデアを生成</div>
+                <div class="item"><strong>🔄 置換:</strong> 複数の文字列を一括置換</div>
+                <div class="item"><strong>🔢 連番:</strong> 台詞に001, 002...と自動で番号付与</div>
+            </div>
+
+            <div class="section">
+                <div class="section-title"><span class="icon">📊</span>分析ツール</div>
+                <div class="item"><strong>文字数計算:</strong> キャラ別の文字数と金額を自動集計</div>
+                <div class="item"><strong>声優依頼文:</strong> プロ仕様の依頼文を自動生成</div>
+                <div class="item"><strong>コピー機能:</strong> 生成された内容をワンタップでコピー</div>
+            </div>
+
+            <div class="section">
+                <div class="section-title"><span class="icon">📤</span>データのバックアップ</div>
+                
+                <div class="note warning">
+                    <div class="note-title">⚠️ 重要：保存場所について</div>
+                    <div class="item"><strong>保存先:</strong> スマホのブラウザ内（localStorage）</div>
+                    <div class="item"><strong>自動保存:</strong> 2秒ごとにブラウザに自動保存<span class="new-badge">NEW</span></div>
+                    <div class="item" style="color: #d9534f; font-weight: bold;">• ブラウザのキャッシュをクリアすると<strong>消えます</strong></div>
+                    <div class="item" style="color: #d9534f; font-weight: bold;">• 別のスマホ/PCからは見えません</div>
+                    <div class="item" style="color: #d9534f; font-weight: bold;">• 別のブラウザでは見えません</div>
+                    <div class="item" style="color: #ff8c00; font-weight: bold;">→ 定期的なバックアップを強く推奨！</div>
+                </div>
+
+                <div class="step">
+                    <span class="step-number">1</span>
+                    <strong>プロジェクトをコピー</strong><br>
+                    メニュー → プロジェクトをコピー
+                </div>
+                
+                <div class="step">
+                    <span class="step-number">2</span>
+                    <strong>メモアプリに保存</strong><br>
+                    メモアプリを開く → 新規メモ → 長押しでペースト
+                </div>
+                
+                <div class="step">
+                    <span class="step-number">3</span>
+                    <strong>読み込み方法</strong><br>
+                    メニュー → プロジェクトを読み込む → メモをコピーして貼り付け
+                </div>
+            </div>
+
+            <div class="note tip">
+                <div class="note-title">💡 バックアップのコツ</div>
+                <div class="item">• 自動保存があるので執筆中の保存は不要<span class="new-badge">NEW</span></div>
+                <div class="item">• 週に1回は「プロジェクトをコピー」でバックアップ</div>
+                <div class="item">• メモアプリに保存しておけば安心</div>
+                <div class="item">• メールで自分宛に送信してPCで受け取ることも可能</div>
+                <div class="item">• 重要なプロジェクトは複数箇所に保存推奨</div>
+            </div>
+
+            <div class="section">
+                <div class="section-title"><span class="icon">🎨</span>スマホ版の特徴</div>
+                <div class="item"><strong>自動保存:</strong> 2秒ごとの自動保存で安心<span class="new-badge">NEW</span></div>
+                <div class="item"><strong>タブ切替:</strong> 編集・シーン・プロジェクトの3タブ構成</div>
+                <div class="item"><strong>PWA対応:</strong> ホーム画面に追加してアプリとして使用可能</div>
+                <div class="item"><strong>オフライン:</strong> インストール後はオフラインでも動作</div>
+                <div class="item"><strong>レスポンシブ:</strong> 縦・横どちらの向きでも使いやすい</div>
+                <div class="item"><strong>タッチ最適化:</strong> ボタンはすべてタップしやすいサイズ</div>
+            </div>
+
+            <div class="note success">
+                <div class="note-title">📲 PWAとしてインストール<span class="new-badge">NEW</span></div>
+                <div class="item"><strong>Android:</strong> Chrome メニュー → 「ホーム画面に追加」</div>
+                <div class="item"><strong>iPhone:</strong> Safari 共有ボタン → 「ホーム画面に追加」</div>
+                <div class="item">アプリアイコンが追加され、フルスクリーンで起動します</div>
+                <div class="item">オフラインでも使用可能になります</div>
+            </div>
+
+            <div class="section">
+                <div class="section-title"><span class="icon">❓</span>よくある質問</div>
+                
+                <div class="item"><strong>Q: 自動保存はいつ実行されますか？</strong><span class="new-badge">NEW</span></div>
+                <div class="item" style="margin-left: 20px;">A: 文字入力の2秒後に自動的に保存されます。ヘッダーで状態を確認できます</div>
+                
+                <div class="item"><strong>Q: データはどこに保存されますか？</strong></div>
+                <div class="item" style="margin-left: 20px;">A: スマホのブラウザ内に保存されます。定期的にバックアップを取りましょう</div>
+                
+                <div class="item"><strong>Q: PCで作ったファイルをスマホで開けますか？</strong></div>
+                <div class="item" style="margin-left: 20px;">A: はい。.vwpファイルの内容をコピーして、読み込み画面に貼り付けてください</div>
+                
+                <div class="item"><strong>Q: 文字数が更新されないときは？</strong></div>
+                <div class="item" style="margin-left: 20px;">A: 自動的に更新されますが、別のシーンに切り替えると即座に反映されます</div>
+                
+                <div class="item"><strong>Q: プロジェクトが消えてしまいました</strong></div>
+                <div class="item" style="margin-left: 20px;">A: ブラウザのキャッシュクリアが原因の可能性があります。バックアップから復元してください</div>
+            </div>
+
+            <div class="section">
+                <div class="section-title"><span class="icon">🔧</span>トラブルシューティング</div>
+                <div class="item"><strong>動作が重い:</strong> シーン数を減らすか、ブラウザを再起動</div>
+                <div class="item"><strong>自動保存されない:</strong> ブラウザのストレージ容量を確認</div>
+                <div class="item"><strong>ボタンが反応しない:</strong> 画面を一度タップしてフォーカスを戻す</div>
+                <div class="item"><strong>文字が小さい:</strong> ブラウザの設定で文字サイズを変更</div>
+            </div>
+
+            <div class="note tip">
+                <div class="note-title">💡 使いこなしのヒント</div>
+                <div class="item">• 自動保存があるので、保存を気にせず執筆に集中できます<span class="new-badge">NEW</span></div>
+                <div class="item">• シーン別あらすじを書くと全体の流れが把握しやすい</div>
+                <div class="item">• キャラクターは最初に全員登録しておくと便利</div>
+                <div class="item">• スロット機能は行き詰まったときのアイデア出しに最適</div>
+                <div class="item">• 分析ツールで文字数を確認しながら執筆するとバランスが取りやすい</div>
+                <div class="item">• メモ欄は設定やプロット案の一時保存に活用</div>
+            </div>
+
+            <div class="section">
+                <div class="section-title"><span class="icon">🌟</span>推奨環境</div>
+                <div class="item"><strong>ブラウザ:</strong> Chrome、Safari（最新版推奨）</div>
+                <div class="item"><strong>OS:</strong> iOS 14以降、Android 10以降</div>
+                <div class="item"><strong>画面:</strong> 5インチ以上のスマートフォン</div>
+                <div class="item"><strong>通信:</strong> PWAインストール後はオフラインでも使用可能</div>
+                <div class="item"><strong>ストレージ:</strong> 50MB以上の空き容量推奨</div>
+            </div>
+
+            <div class="section">
+                <div class="section-title"><span class="icon">📢</span>アップデート情報<span class="new-badge">NEW</span></div>
+                <div class="item"><strong>v1.1.0 (最新)</strong></div>
+                <div class="item" style="margin-left: 20px;">• 2秒ごとの自動保存機能を追加</div>
+                <div class="item" style="margin-left: 20px;">• 保存ステータス表示機能を追加</div>
+                <div class="item" style="margin-left: 20px;">• PWA対応（ホーム画面に追加可能）</div>
+                <div class="item" style="margin-left: 20px;">• FABボタンを削除してUIをシンプル化</div>
+                <div class="item" style="margin-left: 20px;">• 保存メッセージに🧸マークを追加</div>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p><strong>Scene*Writer Mobile</strong></p>
+            <p style="margin-top: 10px;">シーン構成型シナリオエディター</p>
+            <p style="margin-top: 15px; font-size: 12px;">© 2025 Ambrose Starlit</p>
+            <p style="margin-top: 10px; font-size: 12px;">Ver 1.1.0</p>
+            <p style="margin-top: 5px; font-size: 11px;">🧸 自動保存機能搭載</p>
+        </div>
+    </div>
+</body>
+</html>
