@@ -1,5 +1,5 @@
 // Service Worker for Scene*Writer Mobile
-const CACHE_NAME = 'scene-writer-mobile-v1.0';
+const CACHE_NAME = 'scene-writer-mobile-v1.1';
 const urlsToCache = [
   '/scene-writer/mobile/',
   '/scene-writer/mobile/index.html',
