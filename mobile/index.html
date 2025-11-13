@@ -7,6 +7,15 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <title>Scene*Writer Mobile</title>
+    <!-- PWA設定 -->
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#7c5b53">
+
+<!-- iOS対応 -->
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Scene*Writer">
+<link rel="apple-touch-icon" href="icon-192.png">
     <style>
         * { 
             margin: 0; 
@@ -2579,9 +2588,15 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('/sw.js').catch(() => {});
+    window.addEventListener('load', () => {
+        navigator.serviceWorker.register('sw-mobile.js')
+            .then(reg => console.log('SW登録成功'))
+            .catch(err => console.log('SW登録失敗:', err));
+    });
 }
     </script>
 </body>
 </html>
+
+
 
