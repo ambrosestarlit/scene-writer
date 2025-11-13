@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scene*Writer 使い方ガイド</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            font-family: "MS Gothic", "Hiragino Kaku Gothic ProN", "Yu Gothic", sans-serif; 
+            background: #f5f0e8;
+            padding: 20px;
+            line-height: 1.8;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding-bottom: 20px;
+            border-bottom: 3px solid #7c5b53;
+        }
+        .title {
+            font-size: 36px;
+            font-weight: bold;
+            color: #7c5b53;
+            margin-bottom: 10px;
+        }
+        .subtitle {
+            font-size: 16px;
+            color: #a0795f;
+        }
+        .section {
+            margin-bottom: 35px;
+        }
+        .section-title {
+            font-size: 22px;
+            font-weight: bold;
+            color: #7c5b53;
+            margin-bottom: 15px;
+            padding: 10px 15px;
+            background: #f9f5f0;
+            border-left: 5px solid #7c5b53;
+            border-radius: 5px;
+        }
+        .item {
+            margin-bottom: 12px;
+            padding-left: 20px;
+            position: relative;
+        }
+        .item::before {
+            content: "•";
+            position: absolute;
+            left: 5px;
+            color: #7c5b53;
+            font-weight: bold;
+        }
+        .item strong {
+            color: #7c5b53;
+        }
+        .shortcut {
+            display: inline-block;
+            background: #e7d0a9;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            margin-left: 8px;
+            color: #7c5b53;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 2px solid #e7d0a9;
+            color: #999;
+            font-size: 14px;
+        }
+        .note {
+            background: #fff9f0;
+            border: 2px solid #e7d0a9;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 20px 0;
+        }
+        .note-title {
+            font-weight: bold;
+            color: #7c5b53;
+            margin-bottom: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="title">🎬 Scene*Writer 使い方ガイド</div>
+            <div class="subtitle">シーン構成型シナリオエディター</div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">📝 基本操作</div>
+            <div class="item"><strong>新規作成:</strong> ウェルカム画面またはメニューバーから「新規」をクリック</div>
+            <div class="item"><strong>ファイル保存:</strong> メニューバーの「上書き保存」で現在の作業を保存</div>
+            <div class="item"><strong>ファイル読込:</strong> メニューバーの「読込」で既存のプロジェクトを開く</div>
+            <div class="item"><strong>エクスポート:</strong> JSON形式でプロジェクトデータを書き出し</div>
+            <div class="item"><strong>TXT書出:</strong> テキストファイルとしてシナリオを出力</div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">🎭 キャラクター管理</div>
+            <div class="item"><strong>キャラクター登録:</strong> 「キャラ管理」ボタンから新規キャラクターを追加</div>
+            <div class="item"><strong>キャラボタン:</strong> エディター上部にキャラクター名のボタンが自動生成</div>
+            <div class="item"><strong>台詞挿入:</strong> キャラボタンをクリックで「キャラ名：」形式で挿入</div>
+            <div class="item"><strong>括弧形式切替:</strong> チェックボックスで「」形式と：形式を切り替え可能</div>
+            <div class="item"><strong>特殊文字ボタン:</strong> …、っ、ッ、♡、〜、ー などの記号をワンクリックで挿入</div>
+            <div class="item"><strong>カット表記ボタン:</strong> 【カットA】〜【カットD】をワンクリックで挿入</div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">🎬 シーン管理</div>
+            <div class="item"><strong>シーン数設定:</strong> メニューバーでシーン数を変更（1〜300）</div>
+            <div class="item"><strong>シーン切替:</strong> 左側のリストまたはドロップダウンで選択</div>
+            <div class="item"><strong>目標分数:</strong> 各シーンに目標となる尺（分数）を設定可能</div>
+            <div class="item"><strong>文字数表示:</strong> 各シーンの文字数と推定時間を自動計算（240文字=1分）</div>
+            <div class="item"><strong>シーン別あらすじ:</strong> 右側パネルで各シーンのあらすじを記入</div>
+        </div>
+
+        <div class="note">
+            <div class="note-title">📏 時間計算について</div>
+            <div class="item">文字数から尺（分数）を自動計算します：</div>
+            <div class="item">• 0〜239文字 → 0分</div>
+            <div class="item">• 240〜479文字 → 1分</div>
+            <div class="item">• 480〜719文字 → 2分</div>
+            <div class="item">• 720〜959文字 → 3分</div>
+            <div class="item">• 以降、240文字ごとに1分ずつ加算</div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">🔊 音声効果・演出</div>
+            <div class="item"><strong>ト書き:</strong> シーンの状況説明を挿入</div>
+            <div class="item"><strong>現在地:</strong> シーンの場所情報を挿入</div>
+            <div class="item"><strong>効果音:</strong> SE（Sound Effect）を選択・挿入</div>
+            <div class="item"><strong>BGM:</strong> 背景音楽の指定を挿入</div>
+            <div class="item"><strong>環境音:</strong> 雨音、風音などの環境音を挿入</div>
+            <div class="item"><strong>喘ぎ声:</strong> アダルトコンテンツ用の音声を生成 <span class="shortcut">💕</span></div>
+            <div class="item"><strong>アダルト効果音:</strong> R18コンテンツ用の効果音 <span class="shortcut">🔞</span></div>
+            <div class="item"><strong>創作スロット:</strong> ランダムな創作アイデア生成 <span class="shortcut">🎰</span></div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">📊 テキスト処理機能</div>
+            <div class="item"><strong>文字置換:</strong> 一括で文字列を置き換え</div>
+            <div class="item"><strong>台詞連番:</strong> 台詞に自動で番号を振る機能</div>
+            <div class="item"><strong>文字数カウント:</strong> リアルタイムで文字数を表示</div>
+            <div class="item"><strong>推定尺計算:</strong> 文字数から推定される再生時間を自動計算</div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">📅 プロジェクト情報</div>
+            <div class="item"><strong>作品タイトル:</strong> 右上のフィールドで作品名を設定</div>
+            <div class="item"><strong>執筆期日:</strong> カレンダーボタンで締切日を設定</div>
+            <div class="item"><strong>全体あらすじ:</strong> 上部中央で作品全体の概要を記入</div>
+            <div class="item"><strong>メモ機能:</strong> 右下パネルで自由にメモを記入</div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">⏰ 統計情報</div>
+            <div class="item"><strong>時計表示:</strong> 左上に現在時刻を表示</div>
+            <div class="item"><strong>総文字数:</strong> プロジェクト全体の文字数を表示</div>
+            <div class="item"><strong>シーン別文字数:</strong> 現在選択中のシーンの文字数</div>
+            <div class="item"><strong>目安の尺:</strong> 推定される全体の再生時間（分）</div>
+            <div class="item"><strong>総合目標:</strong> 全シーンの目標分数を合計表示</div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">💾 データ管理</div>
+            <div class="item"><strong>自動保存:</strong> 入力内容は自動的にブラウザに保存されます</div>
+            <div class="item"><strong>最近のプロジェクト:</strong> ウェルカム画面に最近使用したファイルを表示</div>
+            <div class="item"><strong>エクスポート形式:</strong> .vwp形式（JSON）とTXT形式での出力に対応</div>
+            <div class="item"><strong>インポート:</strong> .vwpまたは.json形式のファイルを読み込み可能</div>
+            <div class="item"><strong>プロジェクト削除:</strong> ウェルカム画面の最近のプロジェクト一覧から削除可能</div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">🎨 インターフェース</div>
+            <div class="item"><strong>チョコレート配色:</strong> 目に優しいブラウン系の配色</div>
+            <div class="item"><strong>レスポンシブデザイン:</strong> ウィンドウサイズに応じて自動調整</div>
+            <div class="item"><strong>シーンリスト:</strong> 左側に全シーンをリスト表示</div>
+            <div class="item"><strong>エディター:</strong> 中央の大きなテキストエリアで執筆</div>
+            <div class="item"><strong>サイドパネル:</strong> 右側にあらすじとメモ欄を配置</div>
+        </div>
+
+        <div class="note">
+            <div class="note-title">💡 ヒント</div>
+            <div class="item">• プロジェクトは定期的に「上書き保存」でバックアップを作成しましょう</div>
+            <div class="item">• シーン別あらすじを活用すると、全体の流れが把握しやすくなります</div>
+            <div class="item">• 目標分数を設定すると、各シーンの長さを意識した執筆ができます</div>
+            <div class="item">• 特殊文字ボタンを活用すると、入力が効率的になります</div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">🔧 トラブルシューティング</div>
+            <div class="item"><strong>プロジェクトが開けない:</strong> ファイル形式が.vwpまたは.jsonか確認してください</div>
+            <div class="item"><strong>文字数が更新されない:</strong> ブラウザをリロードしてみてください</div>
+            <div class="item"><strong>保存したファイルが見つからない:</strong> ブラウザのlocalStorageに保存されています。「読込」から開けます</div>
+            <div class="item"><strong>旧バージョンのデータ:</strong> Cut-表記のデータは自動的にScene-表記に変換されます</div>
+        </div>
+
+        <div class="note">
+            <div class="note-title">💻 ノートパソコンでの使用について</div>
+            <div class="item">ノートパソコンで使用する場合は、ブラウザの表示倍率を調整すると使いやすくなります</div>
+            <div class="item">• <strong>推奨倍率:</strong> 125%〜150%</div>
+            <div class="item">• <strong>拡大方法（Windows）:</strong> Ctrl + プラス（+）キー</div>
+            <div class="item">• <strong>拡大方法（Mac）:</strong> Command + プラス（+）キー</div>
+            <div class="item">• <strong>縮小方法:</strong> Ctrl/Command + マイナス（-）キー</div>
+            <div class="item">• <strong>リセット:</strong> Ctrl/Command + 0（ゼロ）キー</div>
+            <div class="item">お好みの倍率に調整してご使用ください</div>
+        </div>
+
+        <div class="footer">
+            <p>Scene*Writer - シーン構成型シナリオエディター</p>
+            <p style="margin-top: 10px;">© 2025 Ambrose Starlit</p>
+        </div>
+    </div>
+</body>
+</html>
