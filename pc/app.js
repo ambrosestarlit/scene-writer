@@ -118,6 +118,15 @@ const app = {
         // 残った引用符・括弧記号そのものは文字数に含めない
         result = result.replace(/[()（）「」『』]/g, '');
 
+        // 濁点記号そのものは文字数に含めない
+        // 例: あ゛ → あ の1文字としてカウント
+        // U+309B(゛)、U+3099(結合濁点)、U+FF9E(半角濁点)に対応
+        result = result.replace(/[\u3099\u309B\uFF9E]/g, '');
+
+        // 句読点そのものは文字数に含めない
+        // 例: あ。 → あ の1文字としてカウント
+        result = result.replace(/[。、]/g, '');
+
         return result.trim();
     },
 
