@@ -8,7 +8,7 @@ const app = {
 
     // 文字数カウントから除外する行頭記号
     // 例: // ト書き / 〇 現在地 / 【暗転】 / (補足)
-    // 空白行、台詞行の名前＋：、台詞本文中の括弧・引用符も文字数カウントから除外
+    // 空白行、台詞行の名前、台詞本文を囲む括弧、台詞後ろの丸括弧補足も文字数カウントから除外
     excludedLinePrefixes: ['//', '〇', '○', '【', '(', '（'],
 
     normalizeLineForCharCount(line) {
@@ -23,22 +23,99 @@ const app = {
 
     stripSpeakerNameForCharCount(line) {
         const normalized = this.normalizeLineForCharCount(line);
-        const match = normalized.match(/^([^：:\r\n]{1,80})[：:](.*)$/);
 
-        if (!match) return normalized;
+        // 名前：本文 / 名前:本文 の「名前：」部分は文字数に含めない
+        const colonMatch = normalized.match(/^([^：:\r\n]{1,80})[：:](.*)$/);
+        if (colonMatch) {
+            const speakerName = colonMatch[1].trim();
+            if (speakerName) {
+                return colonMatch[2].trimStart();
+            }
+        }
 
-        const speakerName = match[1].trim();
-        if (!speakerName) return normalized;
+        // 名前「本文」 / 名前(本文) / 名前（本文） の「名前」部分は文字数に含めない
+        const wrappedMatch = normalized.match(/^([^「『（(\r\n]{1,80})([「『（(])([\s\S]*)([」』）)])\s*$/);
+        if (wrappedMatch) {
+            const speakerName = wrappedMatch[1].trim();
+            const open = wrappedMatch[2];
+            const close = wrappedMatch[4];
+            const pairs = {
+                '「': '」',
+                '『': '』',
+                '（': '）',
+                '(': ')'
+            };
 
-        return match[2].trimStart();
+            if (speakerName && pairs[open] === close) {
+                return wrappedMatch[3].trim();
+            }
+        }
+
+        return normalized;
+    },
+
+    isSingleWrappedPairForCharCount(text, open, close) {
+        if (!text || !text.startsWith(open) || !text.endsWith(close)) return false;
+
+        let depth = 0;
+        for (let i = 0; i < text.length; i++) {
+            const char = text[i];
+
+            if (char === open) {
+                depth++;
+            } else if (char === close) {
+                depth--;
+                if (depth < 0) return false;
+
+                // 最外側の閉じ括弧が末尾より前に来る場合は、全体を囲む括弧ではない
+                if (depth === 0 && i !== text.length - 1) {
+                    return false;
+                }
+            }
+        }
+
+        return depth === 0;
+    },
+
+    unwrapWholeDialogueBodyForCharCount(text) {
+        let result = (text || '').trim();
+        const pairs = [
+            ['「', '」'],
+            ['『', '』'],
+            ['（', '）'],
+            ['(', ')']
+        ];
+
+        let changed = true;
+        while (changed && result) {
+            changed = false;
+
+            for (const [open, close] of pairs) {
+                if (this.isSingleWrappedPairForCharCount(result, open, close)) {
+                    result = result.slice(1, -1).trim();
+                    changed = true;
+                    break;
+                }
+            }
+        }
+
+        return result;
     },
 
     normalizeDialogueBodyForCharCount(text) {
         let result = (text || '').trim();
 
-        // 台詞本文を囲む括弧・引用符は文字数に含めない
+        // 台詞本文全体を囲む括弧・引用符は文字数に含めず、中身だけをカウント
         // 例: あいす：(ああああ) → ああああ のみカウント
-        //     あいす：「ああああ」 → ああああ のみカウント
+        //     名前「ああああ」 → ああああ のみカウント
+        //     名前(ああああ) → ああああ のみカウント
+        result = this.unwrapWholeDialogueBodyForCharCount(result);
+
+        // 台詞の後ろに付く丸括弧の補足・演技指示は、中身ごと文字数に含めない
+        // 例: 名前：あああ(あああ) → あああ のみカウント
+        result = result.replace(/[（(][^（）()]*[）)]/g, '');
+
+        // 残った引用符・括弧記号そのものは文字数に含めない
         result = result.replace(/[()（）「」『』]/g, '');
 
         return result.trim();
