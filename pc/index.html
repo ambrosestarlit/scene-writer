@@ -5,58 +5,99 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Scene*Writer - シナリオ編集ツール</title>
     <style>
+        :root {
+            /* ここを書き換えるだけでUI全体の配色を変更できます */
+            --sw-bg: #e7d0a9;
+            --sw-primary: #7c5b53;
+            --sw-primary-accent: #a0795f;
+            --sw-primary-light: #8b6a5b;
+            --sw-primary-dark: #6c5b43;
+            --sw-primary-muted: #8b6347;
+            --sw-primary-deep: #6a4d45;
+            --sw-primary-warm: #96694d;
+            --sw-menu-start: #d4b89b;
+            --sw-menu-end: #c4a88b;
+            --sw-surface: #ffffff;
+            --sw-surface-soft: #f8f8f8;
+            --sw-surface-muted: #f9f9f9;
+            --sw-surface-alt: #f5f5f5;
+            --sw-surface-tint: #f0e6d2;
+            --sw-scroll-track: #f1f1f1;
+            --sw-border-light: #e0e0e0;
+            --sw-border-gray: #cccccc;
+            --sw-border-muted: #9d8366;
+            --sw-border-warm: #b3967d;
+            --sw-text-main: #333333;
+            --sw-text-sub: #666666;
+            --sw-text-muted: #999999;
+            --sw-text-inverse: #ffffff;
+            --sw-green: #6b8b5a;
+            --sw-green-hover: #7b9b6a;
+            --sw-pink: #c85a8b;
+            --sw-pink-light: #d87aa0;
+            --sw-pink-hover: #b74a7a;
+            --sw-red: #b85a6b;
+            --sw-red-hover: #c86a7b;
+            --sw-beige: #a87b5a;
+            --sw-danger: #ff3333;
+            --sw-overlay-light: rgba(0, 0, 0, 0.2);
+            --sw-overlay: rgba(0, 0, 0, 0.5);
+            --sw-overlay-dark: var(--sw-overlay-dark);
+            --sw-shadow: var(--sw-shadow);
+            --sw-shadow-dark: var(--sw-shadow-dark);
+        }
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: "MS Gothic", monospace; background: #e7d0a9; }
-        .app-container { display: flex; flex-direction: column; height: 100vh; background-color: #e7d0a9; }
-        .header { background: linear-gradient(to right, #7c5b53, #a0795f); color: white; padding: 8px 15px; display: flex; justify-content: space-between; align-items: center; font-size: 12px; }
-        .top-panel { display: grid; grid-template-columns: 140px 1fr 330px; gap: 10px; padding: 10px; background-color: #e7d0a9; }
-        .clock-panel { background: #7c5b53; color: white; padding: 8px; border-radius: 12px; text-align: center; font-size: 11px; display: flex; flex-direction: column; justify-content: center; }
+        body { font-family: "MS Gothic", monospace; background: var(--sw-bg); }
+        .app-container { display: flex; flex-direction: column; height: 100vh; background-color: var(--sw-bg); }
+        .header { background: linear-gradient(to right, var(--sw-primary), var(--sw-primary-accent)); color: var(--sw-text-inverse); padding: 8px 15px; display: flex; justify-content: space-between; align-items: center; font-size: 12px; }
+        .top-panel { display: grid; grid-template-columns: 140px 1fr 330px; gap: 10px; padding: 10px; background-color: var(--sw-bg); }
+        .clock-panel { background: var(--sw-primary); color: var(--sw-text-inverse); padding: 8px; border-radius: 12px; text-align: center; font-size: 11px; display: flex; flex-direction: column; justify-content: center; }
         .clock-time { font-size: 24px; font-weight: bold; margin: 3px 0; }
-        .clock-stats { font-size: 10px; color: #e7d0a9; margin-top: 8px; line-height: 1.6; }
-        .global-synopsis-box { background: white; padding: 8px; border-radius: 8px; display: flex; flex-direction: column; gap: 4px; }
-        .global-label { font-size: 10px; font-weight: bold; color: #7c5b53; }
+        .clock-stats { font-size: 10px; color: var(--sw-bg); margin-top: 8px; line-height: 1.6; }
+        .global-synopsis-box { background: var(--sw-surface); padding: 8px; border-radius: 8px; display: flex; flex-direction: column; gap: 4px; }
+        .global-label { font-size: 10px; font-weight: bold; color: var(--sw-primary); }
         .global-textarea { flex: 1; font-size: 11px; border: none; padding: 4px; max-height: 65px; resize: none; }
         .project-info { display: flex; flex-direction: column; gap: 6px; }
-        .project-item { background: #7c5b53; padding: 8px; border-radius: 8px; }
-        .project-item label { font-size: 9px; color: #e7d0a9; font-weight: bold; display: block; margin-bottom: 4px; }
-        .project-item input { padding: 5px; border: none; border-radius: 4px; font-size: 11px; width: 100%; background: white; }
-        .menu-bar { background: linear-gradient(to right, #d4b89b, #c4a88b); padding: 6px 8px; display: flex; gap: 3px; flex-wrap: wrap; border-bottom: 1px solid #c4a88b; overflow-x: auto; font-size: 11px; }
-        .menu-btn { padding: 5px 10px; background: #7c5b53; color: white; border: none; border-radius: 3px; cursor: pointer; white-space: nowrap; }
-        .menu-separator { width: 1px; background: #7c5b53; opacity: 0.3; margin: 0 3px; }
-        .menu-label { color: #7c5b53; font-weight: bold; padding: 0 3px; }
+        .project-item { background: var(--sw-primary); padding: 8px; border-radius: 8px; }
+        .project-item label { font-size: 9px; color: var(--sw-bg); font-weight: bold; display: block; margin-bottom: 4px; }
+        .project-item input { padding: 5px; border: none; border-radius: 4px; font-size: 11px; width: 100%; background: var(--sw-surface); }
+        .menu-bar { background: linear-gradient(to right, var(--sw-menu-start), var(--sw-menu-end)); padding: 6px 8px; display: flex; gap: 3px; flex-wrap: wrap; border-bottom: 1px solid var(--sw-menu-end); overflow-x: auto; font-size: 11px; }
+        .menu-btn { padding: 5px 10px; background: var(--sw-primary); color: var(--sw-text-inverse); border: none; border-radius: 3px; cursor: pointer; white-space: nowrap; }
+        .menu-separator { width: 1px; background: var(--sw-primary); opacity: 0.3; margin: 0 3px; }
+        .menu-label { color: var(--sw-primary); font-weight: bold; padding: 0 3px; }
         .main-content { display: grid; grid-template-columns: 130px 1fr 130px 300px; gap: 10px; flex: 1; padding: 10px; overflow: hidden; }
-        .cut-panel { background: white; border-radius: 8px; padding: 8px; overflow-y: auto; display: flex; flex-direction: column; gap: 6px; font-size: 11px; }
-        .cut-title { font-weight: bold; color: #7c5b53; text-align: center; font-size: 11px; margin-bottom: 4px; }
+        .cut-panel { background: var(--sw-surface); border-radius: 8px; padding: 8px; overflow-y: auto; display: flex; flex-direction: column; gap: 6px; font-size: 11px; }
+        .cut-title { font-weight: bold; color: var(--sw-primary); text-align: center; font-size: 11px; margin-bottom: 4px; }
         .cut-count-section { display: flex; flex-direction: column; gap: 4px; margin-bottom: 4px; }
-        .cut-count-label { font-size: 10px; font-weight: bold; color: #7c5b53; text-align: center; }
-        .cut-count-select { padding: 4px; border: 1px solid #c4a88b; border-radius: 3px; font-size: 11px; background: white; }
-        .cut-apply-btn { padding: 4px; background: #7c5b53; color: white; border: none; border-radius: 3px; cursor: pointer; font-size: 10px; }
-        .cut-apply-btn:hover { background: #8b6a5b; }
-        .cut-button { padding: 5px; background: #8b6a5b; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 10px; }
-        .cut-info { background: #f5f5f5; padding: 6px; border-radius: 4px; text-align: center; font-size: 10px; }
-        .cut-info-label { font-weight: bold; color: #7c5b53; }
+        .cut-count-label { font-size: 10px; font-weight: bold; color: var(--sw-primary); text-align: center; }
+        .cut-count-select { padding: 4px; border: 1px solid var(--sw-menu-end); border-radius: 3px; font-size: 11px; background: var(--sw-surface); }
+        .cut-apply-btn { padding: 4px; background: var(--sw-primary); color: var(--sw-text-inverse); border: none; border-radius: 3px; cursor: pointer; font-size: 10px; }
+        .cut-apply-btn:hover { background: var(--sw-primary-light); }
+        .cut-button { padding: 5px; background: var(--sw-primary-light); color: var(--sw-text-inverse); border: none; border-radius: 4px; cursor: pointer; font-size: 10px; }
+        .cut-info { background: var(--sw-surface-alt); padding: 6px; border-radius: 4px; text-align: center; font-size: 10px; }
+        .cut-info-label { font-weight: bold; color: var(--sw-primary); }
         .cut-list { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 3px; }
-        .cut-item { padding: 5px 6px; background: #f9f9f9; border-left: 3px solid #7c5b53; cursor: pointer; font-size: 9px; border-radius: 2px; }
-        .cut-item.active { background: #7c5b53; color: white; font-weight: bold; }
-        .editor-panel { background: white; border-radius: 8px; overflow: hidden; display: flex; flex-direction: column; }
-        .editor-toolbar { background: #f8f8f8; border-bottom: 1px solid #e0e0e0; padding: 6px 8px; display: flex; gap: 6px; align-items: center; font-size: 11px; }
+        .cut-item { padding: 5px 6px; background: var(--sw-surface-muted); border-left: 3px solid var(--sw-primary); cursor: pointer; font-size: 9px; border-radius: 2px; }
+        .cut-item.active { background: var(--sw-primary); color: var(--sw-text-inverse); font-weight: bold; }
+        .editor-panel { background: var(--sw-surface); border-radius: 8px; overflow: hidden; display: flex; flex-direction: column; }
+        .editor-toolbar { background: var(--sw-surface-soft); border-bottom: 1px solid var(--sw-border-light); padding: 6px 8px; display: flex; gap: 6px; align-items: center; font-size: 11px; }
         .char-button-panel { display: flex; gap: 3px; flex-wrap: wrap; margin-left: 8px; }
-        .char-button { padding: 3px 6px; background: #8b6a5b; color: white; border: none; border-radius: 3px; font-size: 9px; cursor: pointer; white-space: nowrap; }
+        .char-button { padding: 3px 6px; background: var(--sw-primary-light); color: var(--sw-text-inverse); border: none; border-radius: 3px; font-size: 9px; cursor: pointer; white-space: nowrap; }
         .editor-textarea { flex: 1; font-family: "MS Gothic", monospace; font-size: 13px; border: none; padding: 8px; resize: none; }
-        .button-panel { background: white; border-radius: 8px; padding: 8px; overflow-y: auto; display: flex; flex-direction: column; gap: 4px; font-size: 10px; }
+        .button-panel { background: var(--sw-surface); border-radius: 8px; padding: 8px; overflow-y: auto; display: flex; flex-direction: column; gap: 4px; font-size: 10px; }
         .side-button { padding: 5px 6px; border: none; border-radius: 4px; font-size: 10px; cursor: pointer; width: 100%; }
-        .brown-btn { background: #7c5b53; color: white; }
-        .green-btn { background: #6b8b5a; color: white; }
-        .pink-btn { background: #c85a8b; color: white; }
-        .red-btn { background: #b85a6b; color: white; }
-        .beige-btn { background: #a87b5a; color: white; }
-        .button-title { font-weight: bold; color: #7c5b53; margin: 4px 0 2px 0; }
+        .brown-btn { background: var(--sw-primary); color: var(--sw-text-inverse); }
+        .green-btn { background: var(--sw-green); color: var(--sw-text-inverse); }
+        .pink-btn { background: var(--sw-pink); color: var(--sw-text-inverse); }
+        .red-btn { background: var(--sw-red); color: var(--sw-text-inverse); }
+        .beige-btn { background: var(--sw-beige); color: var(--sw-text-inverse); }
+        .button-title { font-weight: bold; color: var(--sw-primary); margin: 4px 0 2px 0; }
         .checkbox-label { display: flex; align-items: center; gap: 4px; margin: 3px 0; cursor: pointer; font-size: 10px; }
         .right-panel { display: grid; grid-template-rows: 1fr 1fr; gap: 10px; }
-        .synopsis-box { background: white; border-radius: 8px; padding: 8px; overflow: hidden; display: flex; flex-direction: column; gap: 4px; }
-        .synopsis-title { font-size: 11px; font-weight: bold; color: #7c5b53; }
-        .synopsis-textarea { flex: 1; font-family: "MS Gothic", monospace; font-size: 11px; border: 1px solid #e0e0e0; padding: 4px; resize: none; }
-        .status-bar { background: linear-gradient(to right, #d4b89b, #c4a88b); padding: 5px 10px; font-size: 10px; color: #666; border-top: 1px solid #c4a88b; }
+        .synopsis-box { background: var(--sw-surface); border-radius: 8px; padding: 8px; overflow: hidden; display: flex; flex-direction: column; gap: 4px; }
+        .synopsis-title { font-size: 11px; font-weight: bold; color: var(--sw-primary); }
+        .synopsis-textarea { flex: 1; font-family: "MS Gothic", monospace; font-size: 11px; border: 1px solid var(--sw-border-light); padding: 4px; resize: none; }
+        .status-bar { background: linear-gradient(to right, var(--sw-menu-start), var(--sw-menu-end)); padding: 5px 10px; font-size: 10px; color: var(--sw-text-sub); border-top: 1px solid var(--sw-menu-end); }
         
         /* ウェルカム画面のスタイル（WPF版に寄せたデザイン） */
         .welcome-screen { 
@@ -65,27 +106,27 @@
             left: 0; 
             right: 0; 
             bottom: 0; 
-            background: rgba(0,0,0,0.2);
+            background: var(--sw-overlay-light);
             display: flex; 
             align-items: center; 
             justify-content: center; 
             z-index: 1000;
         }
         .welcome-container {
-            background: #e7d0a9;
-            border: 2px solid #7c5b53;
+            background: var(--sw-bg);
+            border: 2px solid var(--sw-primary);
             border-radius: 12px;
             width: 900px;
             max-width: 95vw;
             height: 600px;
             max-height: 90vh;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+            box-shadow: 0 10px 40px var(--sw-shadow);
             display: flex;
             flex-direction: column;
             overflow: hidden;
         }
         .welcome-header {
-            background: #7c5b53;
+            background: var(--sw-primary);
             border-radius: 10px 10px 0 0;
             height: 80px;
             display: flex;
@@ -99,11 +140,11 @@
         .welcome-title {
             font-size: 28px;
             font-weight: bold;
-            color: white;
+            color: var(--sw-text-inverse);
         }
         .welcome-subtitle {
             font-size: 14px;
-            color: #e7d0a9;
+            color: var(--sw-bg);
             margin-top: 5px;
         }
         .welcome-close {
@@ -114,12 +155,12 @@
             height: 30px;
             background: transparent;
             border: none;
-            color: white;
+            color: var(--sw-text-inverse);
             font-size: 20px;
             cursor: pointer;
         }
         .welcome-close:hover {
-            color: #e7d0a9;
+            color: var(--sw-bg);
         }
         .welcome-body {
             flex: 1;
@@ -136,8 +177,8 @@
         }
         .welcome-action-btn {
             padding: 10px;
-            background: #7c5b53;
-            color: white;
+            background: var(--sw-primary);
+            color: var(--sw-text-inverse);
             border: none;
             border-radius: 20px;
             font-weight: bold;
@@ -145,14 +186,14 @@
             transition: background 0.2s;
         }
         .welcome-action-btn:hover {
-            background: #8b6a5b;
+            background: var(--sw-primary-light);
         }
         .welcome-action-btn:active {
-            background: #6c5b43;
+            background: var(--sw-primary-dark);
         }
         .welcome-separator {
             height: 1px;
-            background: #7c5b53;
+            background: var(--sw-primary);
             margin: 10px 0;
         }
         .welcome-recent {
@@ -161,7 +202,7 @@
         .welcome-recent-title {
             font-size: 18px;
             font-weight: bold;
-            color: #7c5b53;
+            color: var(--sw-primary);
             margin-bottom: 15px;
         }
         .welcome-recent-list {
@@ -170,8 +211,8 @@
             gap: 8px;
         }
         .welcome-recent-item {
-            background: white;
-            border: 1px solid #e0e0e0;
+            background: var(--sw-surface);
+            border: 1px solid var(--sw-border-light);
             border-radius: 8px;
             padding: 10px;
             min-height: 80px;
@@ -183,13 +224,13 @@
             align-items: center;
         }
         .welcome-recent-item:hover {
-            background: #f8f8f8;
-            border-color: #7c5b53;
+            background: var(--sw-surface-soft);
+            border-color: var(--sw-primary);
         }
         .welcome-recent-icon {
             width: 50px;
             height: 50px;
-            background: #f0e6d2;
+            background: var(--sw-surface-tint);
             border-radius: 8px;
             display: flex;
             align-items: center;
@@ -204,38 +245,38 @@
         .welcome-recent-name {
             font-size: 16px;
             font-weight: bold;
-            color: #333;
+            color: var(--sw-text-main);
         }
         .welcome-recent-date {
             font-size: 12px;
-            color: #999;
+            color: var(--sw-text-muted);
         }
         .welcome-recent-stats {
             font-size: 11px;
-            color: #666;
+            color: var(--sw-text-sub);
         }
         .welcome-recent-delete {
             width: 24px;
             height: 24px;
             background: transparent;
             border: none;
-            color: #999;
+            color: var(--sw-text-muted);
             font-size: 18px;
             cursor: pointer;
             padding: 0;
             align-self: start;
         }
         .welcome-recent-delete:hover {
-            color: #ff3333;
+            color: var(--sw-danger);
         }
         .welcome-footer {
-            background: #7c5b53;
+            background: var(--sw-primary);
             border-radius: 0 0 10px 10px;
             height: 40px;
             display: flex;
             align-items: center;
             justify-content: center;
-            color: #e7d0a9;
+            color: var(--sw-bg);
             font-size: 12px;
         }
         
@@ -246,26 +287,26 @@
             left: 0;
             right: 0;
             bottom: 0;
-            background: rgba(0,0,0,0.5);
+            background: var(--sw-overlay);
             display: none;
             align-items: center;
             justify-content: center;
             z-index: 2000;
         }
         .help-content {
-            background: white;
+            background: var(--sw-surface);
             border-radius: 12px;
             width: 700px;
             max-width: 90vw;
             max-height: 80vh;
             overflow-y: auto;
             padding: 30px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+            box-shadow: 0 10px 40px var(--sw-shadow);
         }
         .help-title {
             font-size: 24px;
             font-weight: bold;
-            color: #7c5b53;
+            color: var(--sw-primary);
             margin-bottom: 20px;
             text-align: center;
         }
@@ -275,10 +316,10 @@
         .help-section-title {
             font-size: 16px;
             font-weight: bold;
-            color: #7c5b53;
+            color: var(--sw-primary);
             margin-bottom: 10px;
             padding: 5px 10px;
-            background: #f0e6d2;
+            background: var(--sw-surface-tint);
             border-radius: 5px;
         }
         .help-item {
@@ -289,8 +330,8 @@
         }
         .help-shortcut {
             display: inline-block;
-            background: #7c5b53;
-            color: white;
+            background: var(--sw-primary);
+            color: var(--sw-text-inverse);
             padding: 2px 6px;
             border-radius: 3px;
             font-size: 11px;
@@ -300,20 +341,150 @@
             display: block;
             margin: 20px auto 0;
             padding: 10px 30px;
-            background: #7c5b53;
-            color: white;
+            background: var(--sw-primary);
+            color: var(--sw-text-inverse);
             border: none;
             border-radius: 20px;
             font-weight: bold;
             cursor: pointer;
         }
         .help-close-btn:hover {
-            background: #8b6a5b;
+            background: var(--sw-primary-light);
+        }
+        
+        /* キャラクター管理ダイアログ */
+        .char-manager-dialog {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: var(--sw-overlay);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+        }
+        .char-manager-content {
+            background: var(--sw-bg);
+            border: 2px solid var(--sw-primary);
+            border-radius: 12px;
+            width: 600px;
+            max-width: 90vw;
+            max-height: 80vh;
+            overflow: hidden;
+            box-shadow: 0 10px 40px var(--sw-shadow);
+            display: flex;
+            flex-direction: column;
+        }
+        .char-manager-header {
+            background: var(--sw-primary);
+            color: var(--sw-text-inverse);
+            padding: 15px 20px;
+            font-size: 18px;
+            font-weight: bold;
+            text-align: center;
+        }
+        .char-manager-body {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+        }
+        .char-manager-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .char-item {
+            background: var(--sw-surface);
+            border: 1px solid var(--sw-menu-end);
+            border-radius: 8px;
+            padding: 12px 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .char-item-info {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        .char-item-name {
+            font-size: 14px;
+            font-weight: bold;
+            color: var(--sw-text-main);
+        }
+        .char-item-shortcut {
+            font-size: 12px;
+            color: var(--sw-text-sub);
+        }
+        .char-item-actions {
+            display: flex;
+            gap: 5px;
+        }
+        .char-item-btn {
+            padding: 5px 12px;
+            border: none;
+            border-radius: 4px;
+            font-size: 11px;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+        .char-edit-btn {
+            background: var(--sw-primary);
+            color: var(--sw-text-inverse);
+        }
+        .char-edit-btn:hover {
+            background: var(--sw-primary-light);
+        }
+        .char-delete-btn {
+            background: var(--sw-red);
+            color: var(--sw-text-inverse);
+        }
+        .char-delete-btn:hover {
+            background: var(--sw-red-hover);
+        }
+        .char-manager-footer {
+            background: var(--sw-menu-start);
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            gap: 10px;
+        }
+        .char-manager-btn {
+            padding: 8px 20px;
+            border: none;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .char-add-btn {
+            background: var(--sw-green);
+            color: var(--sw-text-inverse);
+            flex: 1;
+        }
+        .char-add-btn:hover {
+            background: var(--sw-green-hover);
+        }
+        .char-close-btn {
+            background: var(--sw-primary);
+            color: var(--sw-text-inverse);
+        }
+        .char-close-btn:hover {
+            background: var(--sw-primary-light);
+        }
+        .char-empty {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--sw-text-muted);
+            font-size: 14px;
         }
         
         ::-webkit-scrollbar { width: 6px; } 
-        ::-webkit-scrollbar-track { background: #f1f1f1; } 
-        ::-webkit-scrollbar-thumb { background: #c4a88b; }
+        ::-webkit-scrollbar-track { background: var(--sw-scroll-track); } 
+        ::-webkit-scrollbar-thumb { background: var(--sw-menu-end); }
         @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
         @keyframes slideOut { from { transform: translateX(0); opacity: 1; } to { transform: translateX(100%); opacity: 0; } }
     </style>
@@ -432,6 +603,24 @@
         </div>
     </div>
 
+    <!-- キャラクター管理ダイアログ -->
+    <div id="charManagerDialog" class="char-manager-dialog">
+        <div class="char-manager-content">
+            <div class="char-manager-header">
+                🎭 キャラクター管理
+            </div>
+            <div class="char-manager-body">
+                <div id="charManagerList" class="char-manager-list">
+                    <!-- キャラクターリストがここに動的に生成されます -->
+                </div>
+            </div>
+            <div class="char-manager-footer">
+                <button class="char-manager-btn char-add-btn" onclick="app.openCharacterManager()">➕ 新規キャラクター追加</button>
+                <button class="char-manager-btn char-close-btn" onclick="app.closeCharacterManagerDialog()">閉じる</button>
+            </div>
+        </div>
+    </div>
+
     <div id="mainApp" class="app-container" style="display: none;">
         <div class="header">
         </div>
@@ -472,6 +661,8 @@
             <button class="menu-btn" onclick="app.exportProject()">エクスポート</button>
             <button class="menu-btn" onclick="app.exportTxt()">TXT書出</button>
             <div class="menu-separator"></div>
+            <button class="menu-btn" onclick="app.openCharacterManagerDialog()">キャラクター管理</button>
+            <div class="menu-separator"></div>
             <button class="menu-btn" onclick="app.showAnalysis()">分析</button>
             <div class="menu-separator"></div>
             <button class="menu-btn" onclick="app.backToWelcome()">🏠</button>
@@ -483,7 +674,7 @@
                 <div class="cut-title">シーン選択</div>
                 <div class="cut-count-section">
                     <div class="cut-count-label">シーン数設定</div>
-                                        <select id="sectionCount" class="cut-count-select" style="width: 80px; padding: 5px; border: 1px solid #c4a88b; border-radius: 5px; background: white;">
+                                        <select id="sectionCount" class="cut-count-select" style="width: 80px; padding: 5px; border: 1px solid var(--sw-menu-end); border-radius: 5px; background: var(--sw-surface);">
                         <option value="1">1</option>
                         <option value="2">2</option>
                         <option value="3">3</option>
@@ -791,7 +982,7 @@
                 <div class="cut-info">
                     <div class="cut-info-label" id="currentCutLabel">Scene-01</div>
                     <div class="cut-info-label" id="currentCutStats">0文字 (0分)</div>
-                    <div class="cut-info-label" id="targetDisplay" style="display: none; color: #8b6347; font-size: 11px; margin-top: 5px;">
+                    <div class="cut-info-label" id="targetDisplay" style="display: none; color: var(--sw-primary-muted); font-size: 11px; margin-top: 5px;">
                         目標: <span id="targetMinutes">0</span>分 (<span id="targetChars">0</span>文字)
                     </div>
                 </div>
@@ -817,14 +1008,9 @@
                     ：形式
                 </div>
                 <div class="button-title">音声効果</div>
-                <button class="side-button green-btn" onclick="app.insertToGaki()">ト書き</button>
-                <button class="side-button green-btn" onclick="app.insertLocation()">現在地</button>
-                <button class="side-button brown-btn" onclick="app.openSoundEffect()">効果音</button>
-                <button class="side-button brown-btn" onclick="app.openBGM()">BGM</button>
-                <button class="side-button brown-btn" onclick="app.openAmbient()">環境音</button>
-                <button class="side-button pink-btn" onclick="app.openMoanGenerator()">💕 喘ぎ声</button>
-                <button class="side-button red-btn" onclick="app.openAdultSound()">🔞 アダルト効果音</button>
-                <button class="side-button beige-btn" onclick="app.openCreativeSlot()">🎰 創作スロット</button>
+                ass="side-button pink-btn" onclick="app.openMoanGenerator()">喘ぎ声</button>
+                <button class="side-button red-btn" onclick="app.openAdultSound()">アダルト効果音</button>
+                <button class="side-button beige-btn" onclick="app.openCreativeSlot()">創作スロット</button>
                 <div class="button-title">テキスト処理</div>
                 <button class="side-button brown-btn" onclick="app.openReplace()">文字置換</button>
                 <button class="side-button brown-btn" onclick="app.openDialogueNumbers()">台詞連番</button>
