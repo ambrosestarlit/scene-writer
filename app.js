@@ -5,6 +5,7 @@ const app = {
     currentCut: 0,
     characters: [],
     autoSaveInterval: null,
+    dialogueOnlyView: false,
 
     // 文字数カウントから除外する行頭記号
     // 例: // ト書き / 〇 現在地 / 【暗転】 / (補足)
@@ -13,6 +14,80 @@ const app = {
 
     normalizeLineForCharCount(line) {
         return (line || '').replace(/^\s*\d{3}\s+/, '').trimStart();
+    },
+
+    normalizeLineForDialogueOnlyView(line) {
+        return (line || '').trimStart();
+    },
+
+    isValidSpeakerNameForDialogueOnlyView(name) {
+        const speakerName = (name || '').trim();
+        if (!speakerName || speakerName.length > 80) return false;
+        if (/^[0-9０-９]/.test(speakerName)) return false;
+        if (/^(?:\/\/|#|【|〇|○|☆)/.test(speakerName)) return false;
+        if (/[。、「」『』【】\[\]{}（）()：:]/.test(speakerName)) return false;
+        if (/[はがをにでともへ]$/.test(speakerName)) return false;
+        return true;
+    },
+
+    isDialogueLineForDisplay(line) {
+        const normalized = this.normalizeLineForDialogueOnlyView(line);
+        if (normalized.trim() === '') return false;
+
+        // 001 台詞 / 001：台詞 / 001「台詞」など、半角数字3桁から始まる台詞行
+        if (/^\d{3}(?:\D|$)/.test(normalized)) {
+            return true;
+        }
+
+        // 名前：台詞 / 名前:台詞
+        const colonMatch = normalized.match(/^([^：:\r\n]{1,80})[：:]/);
+        if (colonMatch && this.isValidSpeakerNameForDialogueOnlyView(colonMatch[1])) {
+            return true;
+        }
+
+        // 名前「台詞」 / 名前『台詞』 / 名前(台詞) / 名前（台詞）
+        const wrappedMatch = normalized.match(/^([^「『（(\r\n]{1,80})[「『（(]/);
+        if (wrappedMatch && this.isValidSpeakerNameForDialogueOnlyView(wrappedMatch[1])) {
+            return true;
+        }
+
+        return false;
+    },
+
+    getDialogueOnlyText(text) {
+        return (text || '')
+            .split(/\r?\n/)
+            .filter(line => this.isDialogueLineForDisplay(line))
+            .join('\n');
+    },
+
+    updateDialogueOnlyView() {
+        const editor = document.getElementById('contentEditor');
+        const preview = document.getElementById('dialogueOnlyPreview');
+        const checkbox = document.getElementById('dialogueOnlyCheckbox');
+
+        if (!editor || !preview) return;
+
+        this.dialogueOnlyView = !!(checkbox && checkbox.checked);
+        preview.value = this.getDialogueOnlyText(editor.value);
+
+        if (this.dialogueOnlyView) {
+            editor.style.display = 'none';
+            preview.style.display = 'block';
+        } else {
+            preview.style.display = 'none';
+            editor.style.display = 'block';
+        }
+    },
+
+    disableDialogueOnlyViewForEditing() {
+        if (!this.dialogueOnlyView) return;
+
+        const checkbox = document.getElementById('dialogueOnlyCheckbox');
+        if (checkbox) checkbox.checked = false;
+
+        this.dialogueOnlyView = false;
+        this.updateDialogueOnlyView();
     },
 
     isExcludedFromCharCount(line) {
@@ -504,7 +579,15 @@ const app = {
     setupEventListeners() {
         document.getElementById('contentEditor').addEventListener('input', () => {
             this.updateCharCount();
+            this.updateDialogueOnlyView();
         });
+
+        const dialogueOnlyCheckbox = document.getElementById('dialogueOnlyCheckbox');
+        if (dialogueOnlyCheckbox) {
+            dialogueOnlyCheckbox.addEventListener('change', () => {
+                this.updateDialogueOnlyView();
+            });
+        }
         
         document.getElementById('synopsisEditor').addEventListener('input', () => {
             if (this.cuts[this.currentCut]) {
@@ -698,6 +781,7 @@ const app = {
         
         // 総合目標も更新
         this.updateTotalTarget();
+        this.updateDialogueOnlyView();
         
         this.updateCutList();
         this.updateCharCount();
@@ -736,6 +820,7 @@ const app = {
         
         // 現在のシーン情報も更新
         this.updateCutList();
+        this.updateDialogueOnlyView();
     },
 
     openCharacterManager() {
@@ -847,6 +932,8 @@ const app = {
     },
 
     insertText(text) {
+        this.disableDialogueOnlyViewForEditing();
+
         const editor = document.getElementById('contentEditor');
         const start = editor.selectionStart;
         const end = editor.selectionEnd;
@@ -954,6 +1041,8 @@ const app = {
     },
 
     insertTextAtCursor(text) {
+        this.disableDialogueOnlyViewForEditing();
+
         const editor = document.getElementById('contentEditor');
         const start = editor.selectionStart;
         const end = editor.selectionEnd;
