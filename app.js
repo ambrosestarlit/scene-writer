@@ -90,6 +90,69 @@ const app = {
         this.updateDialogueOnlyView();
     },
 
+    getCurrentDisplayedSceneText() {
+        const editor = document.getElementById('contentEditor');
+        const preview = document.getElementById('dialogueOnlyPreview');
+        const checkbox = document.getElementById('dialogueOnlyCheckbox');
+
+        if (!editor) return '';
+
+        const isDialogueOnly = !!(checkbox && checkbox.checked);
+        if (isDialogueOnly) {
+            const dialogueOnlyText = this.getDialogueOnlyText(editor.value);
+            if (preview) preview.value = dialogueOnlyText;
+            return dialogueOnlyText;
+        }
+
+        return editor.value;
+    },
+
+    copyCurrentSceneText() {
+        const text = this.getCurrentDisplayedSceneText();
+
+        if (navigator.clipboard && window.isSecureContext) {
+            navigator.clipboard.writeText(text)
+                .then(() => {
+                    this.showStatus(this.dialogueOnlyView ? '台詞のみ表示の内容をコピーしました' : '現在のシーン全文をコピーしました');
+                })
+                .catch(() => {
+                    this.fallbackCopyCurrentSceneText(text);
+                });
+            return;
+        }
+
+        this.fallbackCopyCurrentSceneText(text);
+    },
+
+    fallbackCopyCurrentSceneText(text) {
+        const temp = document.createElement('textarea');
+        temp.value = text;
+        temp.setAttribute('readonly', '');
+        temp.style.position = 'fixed';
+        temp.style.left = '-9999px';
+        temp.style.top = '0';
+        document.body.appendChild(temp);
+
+        temp.focus();
+        temp.select();
+
+        let copied = false;
+        try {
+            copied = document.execCommand('copy');
+        } catch (error) {
+            copied = false;
+        }
+
+        document.body.removeChild(temp);
+
+        if (copied) {
+            this.showStatus(this.dialogueOnlyView ? '台詞のみ表示の内容をコピーしました' : '現在のシーン全文をコピーしました');
+        } else {
+            alert('コピーに失敗しました。ブラウザの権限設定を確認してください。');
+            this.showStatus('コピーに失敗しました');
+        }
+    },
+
     isExcludedFromCharCount(line) {
         const normalized = this.normalizeLineForCharCount(line);
         if (normalized.trim() === '') return true;
